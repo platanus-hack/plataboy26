@@ -1,0 +1,287 @@
+{
+ "source": "https://github.com/wagiminator/CH32V003-GameConsole",
+ "license": "CC BY-SA 3.0",
+ "games": [
+  {
+   "id": "plataboy26",
+   "title": "plataboy26 firmware (game library)",
+   "file": "roms/plataboy26.bin",
+   "eeprom": "roms/plataboy26.eeprom",
+   "thumb": "roms/plataboy26.png",
+   "size": 16384,
+   "f_cpu": 24000000,
+   "description": "The production firmware (firmware/): a menu lists the 15 programs stored compressed in the 128 KiB EEPROM; choosing one installs it into flash through the 844-byte loader kernel (~1-2 s). Every power-on (R / the power button) brings the menu back with the boot animation, on the game played last; in the full-library games, UP + DOWN held 2 s also returns to it. Loading this entry also loads the library into the simulated EEPROM.",
+   "controls": [
+    "Left/Right: previous/next game",
+    "A (release): install and start the game",
+    "Power-on: boot animation, then the menu on the last game"
+   ]
+  },
+  {
+   "id": "plataboy26-microcity",
+   "title": "plataboy26 firmware + MicroCity (game library)",
+   "file": "roms/plataboy26-microcity.bin",
+   "eeprom": "roms/plataboy26-microcity.eeprom",
+   "size": 16384,
+   "f_cpu": 24000000,
+   "description": "The game library firmware (firmware/library.microcity.json, make microcity) with MicroCity added: the 15 programs of the plataboy26 entry plus MicroCity, all in the 128 KiB EEPROM. Pick a game in the menu; every power-on brings the menu back, on the game played last. Loading this entry also loads the library into the simulated EEPROM. A saved city (0x1F600-0x1FA6B, beyond the 2 KiB save area this page keeps) is lost when another entry is loaded.",
+   "controls": [
+    "Left/Right: previous/next game",
+    "A (release): install and start the game",
+    "Power-on: boot animation, then the menu on the last game"
+   ]
+  },
+  {
+   "id": "tiny_invaders",
+   "title": "Tiny Invaders",
+   "file": "roms/tiny_invaders.bin",
+   "thumb": "roms/tiny_invaders.png",
+   "size": 7244,
+   "f_cpu": 12000000,
+   "description": "Tiny Invaders was originally developed by [Daniel Champagne](https://www.tinyjoypad.com/) for the ATtiny85. It is an adaptation of the classic game Space Invaders. The player controls a laser cannon that moves horizontally along the bottom of the screen. The objective is to defend the Earth from waves of descending alien invaders. The aliens move side to side, gradually descending towards the play",
+   "controls": [
+    "Left/Right:  move the cannon",
+    "Fire button: shoot, start game"
+   ]
+  },
+  {
+   "id": "tiny_lander",
+   "title": "Tiny Lander",
+   "file": "roms/tiny_lander.bin",
+   "thumb": "roms/tiny_lander.png",
+   "size": 6416,
+   "f_cpu": 12000000,
+   "description": "Tiny Lander was originally developed by [tscha70](https://github.com/tscha70/TinyLanderV1.0) for the ATtiny85. It is an adaptation of the classic game Lunar Lander that simulates the experience of piloting a spacecraft and landing it safely on the moon's surface. The objective of the game is to control the descent of the lunar lander module, adjusting the thrust and direction to ensure a smooth la",
+   "controls": [
+    "Fire button: main thruster, start game",
+    "Left/Right:  side thrusters",
+    "Hold Up + Fire on title: start in a later level",
+    "Hold Down + Fire on title: 255 lives"
+   ]
+  },
+  {
+   "id": "tiny_tris",
+   "title": "Tiny Tris",
+   "file": "roms/tiny_tris.bin",
+   "thumb": "roms/tiny_tris.png",
+   "size": 7848,
+   "f_cpu": 12000000,
+   "description": "Tiny Tris was originally developed by [Daniel Champagne](https://www.tinyjoypad.com/) for the ATtiny85. It is an adaptation of the well-known game Tetris. The objective of Tetris is to manipulate and arrange the falling Tetriminos to create complete horizontal lines without any gaps. When a line is completed, it clears from the playfield, and the player earns points. As the game progresses, the Te",
+   "controls": [
+    "Left/Right:  move piece",
+    "Down:        drop faster",
+    "Fire button: rotate, start game"
+   ]
+  },
+  {
+   "id": "tiny_arkanoid",
+   "title": "Tiny Arkanoid",
+   "file": "roms/tiny_arkanoid.bin",
+   "thumb": "roms/tiny_arkanoid.png",
+   "size": 15196,
+   "f_cpu": 12000000,
+   "description": "Tiny Arkanoid was originally developed by [Daniel Champagne](https://www.tinyjoypad.com/) for the ATtiny85. It is an adaptation of the classic game Arkanoid. The player controls a paddle at the bottom of the screen and uses it to bounce a ball against a wall of bricks at the top.",
+   "controls": [
+    "Up/Down:     move the paddle (playfield is rotated)",
+    "Fire button: launch ball, start game"
+   ]
+  },
+  {
+   "id": "tiny_pacman",
+   "title": "Tiny Pacman",
+   "file": "roms/tiny_pacman.bin",
+   "thumb": "roms/tiny_pacman.png",
+   "size": 7084,
+   "f_cpu": 12000000,
+   "description": "Tiny Pacman was originally developed by [Daniel Champagne](https://www.tinyjoypad.com/) for the ATtiny85. The player controls a round character called Pacman, who must navigate through a maze filled with pellets and various types of enemies, known as ghosts. The objective of the game is for Pacman to eat all the pellets in the maze while avoiding the ghosts.",
+   "controls": [
+    "Joypad:      steer Pacman",
+    "Fire button: start game"
+   ]
+  },
+  {
+   "id": "tiny_doom",
+   "title": "Tiny Doom",
+   "file": "roms/tiny_doom.bin",
+   "thumb": "roms/tiny_doom.png",
+   "size": 11888,
+   "f_cpu": 12000000,
+   "description": "Can it play Doom? Oh yes, it can! Tiny Doom is a small Doom-like first person shooter. Fight your way through three levels full of zombies, demons and a cacodemon, open the doors, pick up medkits and ammo, and find the blinking exit switch of each level.",
+   "controls": [
+    "Up/Down:     walk forward/backward",
+    "Left/Right:  turn",
+    "Fire button: shoot, start game",
+    "Walk into a door to open it, walk into the exit switch to finish the level."
+   ]
+  },
+  {
+   "id": "tiny_boulder",
+   "title": "Tiny Boulder",
+   "file": "roms/tiny_boulder.bin",
+   "thumb": "roms/tiny_boulder.png",
+   "size": 7452,
+   "f_cpu": 12000000,
+   "description": "Tiny Boulder is a small Boulder Dash-like digging game. Dig your way through six scrolling caves, collect the required number of diamonds before the time runs out and escape through the exit. Watch out for falling boulders, fireflies and butterflies.",
+   "controls": [
+    "Joypad:              walk and dig (push boulders sideways)",
+    "Fire button + pad:   dig or collect next to you without moving",
+    "Fire button:         start game, restart the cave after losing a life"
+   ]
+  },
+  {
+   "id": "tiny_bubble",
+   "title": "Tiny Bubble",
+   "file": "roms/tiny_bubble.bin",
+   "thumb": "roms/tiny_bubble.png",
+   "size": 8264,
+   "f_cpu": 12000000,
+   "description": "Tiny Bubble is a small Bubble Bobble-like platform game. You are a little dragon who blows bubbles. Catch the monsters in bubbles, then burst the bubbles to defeat them and collect the fruit they leave behind. Clear all monsters to reach the next round, but hurry: after a while the monsters get angry, and then the invincible skull comes for you.",
+   "controls": [
+    "Left/Right:  walk",
+    "Up:          jump (hold it to bounce on bubbles)",
+    "Fire button: blow a bubble, start game"
+   ]
+  },
+  {
+   "id": "tiny_karate",
+   "title": "Tiny Karate",
+   "file": "roms/tiny_karate.bin",
+   "thumb": "roms/tiny_karate.png",
+   "size": 9640,
+   "f_cpu": 12000000,
+   "description": "Tiny Karate is a small International Karate-like fighting game. You (white) fight against the computer (black) in front of a mountain and a pagoda. Score points with punches and kicks, block or dodge the attacks of your opponent and earn a new belt with every won bout.",
+   "controls": [
+    "Without fire button:          With fire button:",
+    "Right:      walk forward      (none):     punch",
+    "Left:       walk back         Right:      front kick",
+    "Up:         jump              Up:         high kick",
+    "Down:       crouch            Up+Right:   high punch",
+    "Up+Right:   flying kick       Down:       low punch",
+    "Up+Left:    high block        Down+Right: low kick (sweep)",
+    "Down+Left:  low block         Left:       punch"
+   ]
+  },
+  {
+   "id": "tiny_run",
+   "title": "Tiny Run",
+   "file": "roms/tiny_run.bin",
+   "thumb": "roms/tiny_run.png",
+   "size": 11960,
+   "f_cpu": 12000000,
+   "description": "Tiny Run is a small Out Run-like racing game. Race your convertible along the coast, through the desert, the mountains and the city. Reach the checkpoint at the end of each stage before the time runs out. At each checkpoint the road forks, and the road you take decides the next stage. Five stages in a row bring you to the goal.",
+   "controls": [
+    "Fire button:  accelerate, start game",
+    "Left/Right:   steer",
+    "Down:         brake"
+   ]
+  },
+  {
+   "id": "tiny_shooter",
+   "title": "Tiny Shooter",
+   "file": "roms/tiny_shooter.bin",
+   "thumb": "roms/tiny_shooter.png",
+   "size": 8656,
+   "f_cpu": 12000000,
+   "description": "Tiny Shooter is a small horizontally scrolling shoot'em up game. Fly through open space, over hills and through narrow caves, shoot down waves of enemies, collect power capsules for a stronger gun and defeat the guardian at the end of each stage. Every stage is faster and more crowded than the one before.",
+   "controls": [
+    "Joypad:      move the ship (also diagonally)",
+    "Fire button: shoot (hold for rapid fire), start game"
+   ]
+  },
+  {
+   "id": "tiny_conway",
+   "title": "Conway's Game of Life",
+   "file": "roms/tiny_conway.bin",
+   "thumb": "roms/tiny_conway.png",
+   "size": 1692,
+   "f_cpu": 48000000,
+   "description": "The Game of Life is a cellular automaton, and was invented by Cambridge mathematician John Conway. This game became widely known when it was mentioned in an article published by Scientific American in 1970. It consists of a grid of cells which, based on a few mathematical rules, can live, die or multiply. Depending on the initial conditions, the cells form various patterns throughout the course of",
+   "controls": [
+    "Fire button: new random population"
+   ]
+  },
+  {
+   "id": "hopper",
+   "title": "Hopper",
+   "file": "roms/hopper.bin",
+   "thumb": "roms/hopper.png",
+   "size": 12816,
+   "f_cpu": 48000000,
+   "description": "Hopper by OBONO (Arduboy, 2017, MIT License), ported to this console (games/hopper). Jump on panels and go up (foreground side). If you fall toward bottom, the game is over. Best 10 scores, play count and play time are kept in the EEPROM save area.",
+   "controls": [
+    "Joypad (diagonals too): steer the hopper",
+    "A or B: pause / resume",
+    "Title: Up/Down select, A or B confirm (Start, Sound, Record, Credit)"
+   ]
+  },
+  {
+   "id": "microcity",
+   "title": "MicroCity",
+   "file": "roms/microcity.bin",
+   "eeprom": "roms/microcity.eeprom",
+   "thumb": "roms/microcity.png",
+   "size": 15320,
+   "f_cpu": 48000000,
+   "description": "MicroCity by James Howard (Arduboy, 2018, GPL-3.0), ported to this console (games/microcity). A city simulation inspired by SimCity: zone residential, commercial and industrial areas, connect them to power plants and roads, keep the budget, and fight the fires that break out. The game is larger than the flash: the title screens, the game and the menus are code overlays loaded from the EEPROM, which also holds the terrain maps (loading this entry loads them into the simulated EEPROM). A city can be saved in the EEPROM save area.",
+   "controls": [
+    "Joypad: move the cursor",
+    "A: build with the brush, confirm",
+    "B: toolbar (brushes, Save/Load, Budget), back",
+    "Title: Up/Down select, A confirm; new city: Left/Right choose the terrain"
+   ]
+  },
+  {
+   "id": "justoneboss",
+   "title": "Just One Boss",
+   "file": "roms/justoneboss.bin",
+   "eeprom": "roms/justoneboss.eeprom",
+   "thumb": "roms/justoneboss.png",
+   "size": 15420,
+   "f_cpu": 48000000,
+   "description": "Just One Boss by ayla~nonsense (PICO-8, 2018), ported to this console (games/justoneboss). Duel the magic mirror on a stage of 8 x 5 tiles: collect the magic tiles to fill the boss's bar while dodging his cards, lasers, flowers, coins and reflections, through 4 phases. The cart's logic runs as bytecode (src/logic.py); what runs rarely (the boss's choreography) and the sound effects are in the EEPROM (loading this entry loads them into the simulated EEPROM). Best score and time (normal and hard) are kept in the EEPROM save area.",
+   "controls": [
+    "Joypad: step from tile to tile",
+    "Title: Right or A starts, Left or B starts the hard mode (after one win)",
+    "Game over: Right or A retries, Left or B goes back to the title"
+   ]
+  },
+  {
+   "id": "calibrator",
+   "title": "Joypad Calibrator",
+   "file": "roms/calibrator.bin",
+   "thumb": "roms/calibrator.png",
+   "size": 1644,
+   "f_cpu": 12000000,
+   "description": "",
+   "controls": [
+    "Press each direction (and diagonals): the raw 10-bit ADC value of the joypad pin is shown"
+   ]
+  },
+  {
+   "id": "eeprom_test",
+   "title": "EEPROM Test",
+   "file": "roms/eeprom_test.bin",
+   "thumb": "roms/eeprom_test.png",
+   "size": 3988,
+   "f_cpu": 12000000,
+   "description": "Bring-up test for the AT24CM01 EEPROM added in board rev. 1.2 (games/eeprom_test). Writes two test pages across the 64 KiB boundary, verifies them, measures write and read speed, then restores the original contents.",
+   "controls": [
+    "Fire: toggle between the measurements and the PASS/FAIL summary"
+   ]
+  },
+  {
+   "id": "board_test",
+   "title": "Board Test (rev. 1.3)",
+   "file": "roms/board_test.bin",
+   "thumb": "roms/board_test.png",
+   "size": 4284,
+   "f_cpu": 12000000,
+   "description": "Bring-up test for board rev. 1.3 (games/board_test): EEPROM test at power-on, then a live monitor of every input with the raw ADC values of the joypad (PC4) and the A/B pin (PA2). Flash it first on a new board and press every button once.",
+   "controls": [
+    "Every button lights up its letter: U D L R A B",
+    "A and B click the buzzer",
+    "A+B together reads as A (shared pin)"
+   ]
+  }
+ ]
+}

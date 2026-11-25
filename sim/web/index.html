@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0f12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>CH32V003 Console Sim</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='1' width='26' height='30' rx='3' fill='%23111'/%3E%3Crect x='6' y='4' width='20' height='11' fill='%2370c8ff'/%3E%3Ccircle cx='11' cy='23' r='3' fill='%23ddd'/%3E%3Ccircle cx='22' cy='25' r='2.5' fill='%23ddd'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="chip-logo" aria-hidden="true"></span>
+    <div>
+      <h1>CH32V003 Mini Game Console</h1>
+      <p>cycle-timed simulator · QingKe V2A RV32EC · SSD1306 128×64</p>
+    </div>
+  </div>
+  <div class="status">
+    <span class="pill" id="pill-clock" title="HCLK set by the firmware">— MHz</span>
+    <span class="pill" id="pill-speed" title="emulated time / real time">—</span>
+    <span class="pill" id="pill-fps" title="full OLED refreshes per second">— fps</span>
+    <span class="pill dev hidden" id="pill-dev" title="live reload: the dev server reloads this firmware whenever it changes">● live</span>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- ============================== library ============================== -->
+  <aside class="panel library">
+    <div class="panel-head">
+      <h2>Games</h2>
+      <label class="btn small" title="Load a .bin, .hex or .elf firmware">
+        Load firmware…
+        <input type="file" id="file" accept=".bin,.hex,.elf,application/octet-stream" hidden>
+      </label>
+    </div>
+    <ul id="games" class="games"></ul>
+    <p class="hint">Drop a <code>.bin</code>, <code>.hex</code> or <code>.elf</code> anywhere to run it.</p>
+  </aside>
+
+  <!-- ============================== device =============================== -->
+  <section class="stage">
+    <div class="board-wrap">
+      <div class="board" id="board">
+        <span class="hole tl"></span><span class="hole tr"></span><span class="hole bl"></span><span class="hole br"></span>
+        <div class="oled-module">
+          <div class="pins"><i></i><i></i><i></i><i></i><span>GND VDD SCK SDA</span></div>
+          <div class="glass">
+            <canvas id="screen" width="640" height="320" aria-label="OLED display"></canvas>
+          </div>
+          <div class="flex"></div>
+        </div>
+        <div class="pwr" title="Power switch: cycles the supply (power-on reset)">
+          <span>OFF</span><button id="power" class="slide on" aria-label="power"></button><span>ON</span>
+          <b>PWR</b>
+        </div>
+        <div class="prog"><i></i><i></i><i></i><b>PROG</b></div>
+        <div class="silk">RISC-V MINI GAME CONSOLE</div>
+
+        <div class="dpad">
+          <button class="sw up"    data-btn="UP"    aria-label="up"><i></i></button>
+          <button class="sw left"  data-btn="LEFT"  aria-label="left"><i></i></button>
+          <button class="sw right" data-btn="RIGHT" aria-label="right"><i></i></button>
+          <button class="sw down"  data-btn="DOWN"  aria-label="down"><i></i></button>
+        </div>
+        <div class="buzzer" id="buzzer"><span>MLT-5030</span></div>
+        <button class="sw act" data-btn="ACT" aria-label="fire (A)"><i></i></button>
+        <button class="sw b" data-btn="B" aria-label="B"><i></i></button>
+        <span class="lbl lbl-a">A</span><span class="lbl lbl-b">B</span>
+      </div>
+    </div>
+
+    <div class="transport">
+      <button class="btn" id="btn-pause" title="Pause / resume (P)">Pause</button>
+      <button class="btn" id="btn-reset" title="Power-cycle the console (R)">Reset</button>
+      <label class="field">Speed
+        <select id="speed">
+          <option value="0.25">¼×</option>
+          <option value="0.5">½×</option>
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+          <option value="4">4×</option>
+          <option value="0">max</option>
+        </select>
+      </label>
+      <label class="field vol">Sound
+        <input type="range" id="volume" min="0" max="100" value="60">
+      </label>
+      <button class="btn" id="btn-full" title="Show only the screen, fullscreen (F)">Fullscreen</button>
+      <button class="btn" id="btn-shot" title="Save a PNG of the OLED">Screenshot</button>
+      <button class="btn" id="btn-save" title="Save state (F2)">Save state</button>
+      <button class="btn" id="btn-load" title="Load state (F4)">Load state</button>
+    </div>
+    <p class="keys"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> / <kbd>WASD</kbd> joypad · <kbd>Space</kbd> / <kbd>X</kbd> A (fire) · <kbd>Z</kbd> / <kbd>C</kbd> B (rev. 1.3) · <kbd>P</kbd> pause · <kbd>R</kbd> reset · <kbd>F</kbd> fullscreen · gamepads supported</p>
+  </section>
+
+  <!-- ============================== inspector ============================ -->
+  <aside class="panel inspector">
+    <nav class="tabs" role="tablist">
+      <button role="tab" class="tab active" data-tab="info">Game</button>
+      <button role="tab" class="tab" data-tab="hw">Hardware</button>
+      <button role="tab" class="tab" data-tab="debug">Debug</button>
+    </nav>
+
+    <section class="tabpane active" id="tab-info">
+      <h3 id="game-title">—</h3>
+      <p id="game-desc" class="muted"></p>
+      <h4>Controls</h4>
+      <ul id="game-controls" class="controls"></ul>
+      <p class="muted small" id="game-meta"></p>
+    </section>
+
+    <section class="tabpane" id="tab-hw">
+      <div class="form">
+        <label>Board revision
+          <select id="board-rev">
+            <option value="11">1.1: original (wagiminator)</option>
+            <option value="12">1.2: + 128 KiB EEPROM</option>
+            <option value="13" selected>1.3: + EEPROM + B button</option>
+          </select>
+        </label>
+        <label>Display
+          <select id="oled-color">
+            <option value="white">White OLED</option>
+            <option value="blue">Blue OLED</option>
+            <option value="duo">Yellow / blue OLED</option>
+            <option value="green">Green OLED</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="oled-grid" checked> Pixel grid</label>
+        <label class="check"><input type="checkbox" id="oled-glow" checked> Glow</label>
+        <label>Battery / VCC
+          <select id="vcc">
+            <option value="3000">CR2032 · 3.0 V</option>
+            <option value="3300" selected>3.3 V (WCH-LinkE)</option>
+            <option value="3600">LIR2032 · 3.6 V</option>
+          </select>
+        </label>
+        <label>ADC noise (LSB)
+          <input type="number" id="noise" min="0" max="20" value="1">
+        </label>
+        <label class="check"><input type="checkbox" id="fault-halt" checked> Halt on CPU exception</label>
+      </div>
+      <h4>CPU timing model <span class="muted small">(cycles)</span></h4>
+      <div class="form grid5">
+        <label>load<input type="number" id="t-load" min="1" max="8" value="2"></label>
+        <label>store<input type="number" id="t-store" min="1" max="8" value="2"></label>
+        <label>branch<input type="number" id="t-branch" min="1" max="8" value="2"></label>
+        <label>jump<input type="number" id="t-jump" min="1" max="8" value="2"></label>
+        <label>+mmio<input type="number" id="t-mmio" min="0" max="8" value="1"></label>
+      </div>
+      <p class="muted small">Calibrate against real hardware with <code>games/cpi_bench</code>. Flash wait states (48 MHz) are added automatically.</p>
+      <h4>EEPROM <span class="muted small">(AT24CM01, 128 KiB at I2C 0x50/0x51, rev. 1.2+)</span></h4>
+      <p class="muted small" id="ee-info">—</p>
+      <div class="row-btns">
+        <label class="btn small" title="Load a raw EEPROM image (.bin, up to 128 KiB)">Load image…<input type="file" id="ee-file" hidden></label>
+        <button class="btn small" id="ee-download" title="Save the EEPROM contents as a .bin">Download</button>
+        <button class="btn small" id="ee-erase" title="Fill with 0xFF, like a new chip">Erase</button>
+      </div>
+      <p class="muted small">Contents are kept in this browser and survive resets and firmware changes, like the real chip.</p>
+    </section>
+
+    <section class="tabpane" id="tab-debug">
+      <dl class="stats" id="stats"></dl>
+      <div id="fault" class="fault hidden"></div>
+      <h4>Registers</h4>
+      <pre id="regs" class="regs"></pre>
+      <h4>Serial (USART1 TX) <button class="link" id="clear-serial">clear</button></h4>
+      <pre id="serial" class="console"></pre>
+      <h4>Simulator log <button class="link" id="clear-log">clear</button></h4>
+      <pre id="log" class="console"></pre>
+    </section>
+  </aside>
+</main>
+
+<div class="drop hidden" id="drop">Drop firmware to run it</div>
+<div class="toast hidden" id="toast"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

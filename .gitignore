@@ -1,0 +1,54 @@
+# toolchain (tools/setup.sh downloads it) and upstream reference clones
+tools/xpack-*/
+ref/
+# build outputs
+sim/chsim
+games/*/bin/
+.DS_Store
+tools/kicad-dl/
+tools/venv/
+tools/freerouting/
+hardware/build/
+hardware/console_sklib.py
+hardware/console.erc
+hardware/console.log
+__pycache__/
+skidl_REPL.*
+hardware/release/*/
+firmware/build/
+
+# locally built games that may not be shared (see games/arduventure)
+sim/web/roms/local/
+sim/web/roms/local.json
+games/arduventure/upstream/
+games/arduventure/build/
+games/arduventure/bin/
+firmware/library.local.json
+firmware/library.hack26.json
+firmware/build-hack26/
+firmware/build-platanus/
+firmware/build-local/
+
+# MicroCity: the game is fetched by games/microcity/fetch.sh
+games/microcity/upstream/
+games/microcity/build/
+games/microcity/bin/
+firmware/build-microcity/
+
+# Just One Boss: the cart is fetched by games/justoneboss/fetch.sh; generated sources
+games/justoneboss/upstream/
+games/justoneboss/src/bytecode.h
+games/justoneboss/src/sprites.h
+
+# packer cache (firmware/tools/pack.py)
+firmware/tools/.lzcache/
+firmware/build-full/
+
+# Tiny games: sources copied and patched by games/tiny/Makefile
+games/tiny/build/
+
+# Llegamos tarde a la hackathon: the original is fetched by games/llegamostarde/fetch.sh
+games/llegamostarde/upstream/
+firmware/library.custom.json
+firmware/build-custom/
+firmware/dist/
