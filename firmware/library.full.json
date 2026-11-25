@@ -1,0 +1,64 @@
+{
+  "comment": "Full library for board rev. 1.3/1.3.1 (make full -> build-full/): Llegamos tarde first, the ports, Nitro Nonsense (from the devkit), Llegamos tarde (Platanus Hack 26 edition; its original has no license yet) and the Tiny games that fit. All games are built with games/common/sysx.c (UP + DOWN held 2 s: back to the menu; low-battery beep, except Nitro Nonsense). The Tiny games are rebuilt from source (games/tiny). Data regions and save slots are fixed addresses. Nitro Nonsense and MicroCity keep their code overlays as LZ streams that the kernel unpacks. No Board Test: the EEPROM test scratch (test_scratch false) holds programs. Left out for room: Tiny Invaders, Tiny Pacman, Tiny Tris, Tiny Boulder, Tiny Bubble, Board Test, Tiny Arkanoid, Tiny Doom, Tiny Run, Tiny Shooter, Tiny Karate.",
+  "programs": [
+    {
+      "name": "Llegamos tarde",
+      "file": "../games/llegamostarde/bin/llegamostarde.bin",
+      "card": "../art/cards/llegamostarde.png"
+    },
+    {
+      "name": "Arduventure",
+      "file": "../games/arduventure/bin/arduventure.bin",
+      "data": {
+        "file": "../games/arduventure/bin/arduventure.region",
+        "at": "0x197C2"
+      }
+    },
+    {
+      "name": "MicroCity",
+      "file": "../games/microcity/bin/microcity.bin",
+      "card": "../art/cards/microcity.png",
+      "data": {
+        "file": "../games/microcity/bin/microcity.region",
+        "at": "0x179A0"
+      },
+      "save": {
+        "at": "0x1F600",
+        "size": "0x46C"
+      }
+    },
+    {
+      "name": "Just One Boss",
+      "file": "../games/justoneboss/bin/justoneboss.bin",
+      "card": "../art/cards/justoneboss.png",
+      "data": {
+        "file": "../games/justoneboss/bin/justoneboss.region",
+        "at": "0xE4C0"
+      }
+    },
+    {
+      "name": "Hopper",
+      "file": "../games/hopper/bin/hopper.bin",
+      "card": "../art/cards/hopper.png"
+    },
+    {
+      "name": "Tiny Lander",
+      "file": "../games/tiny/bin/tiny_lander.bin"
+    },
+    {
+      "name": "Tiny Conway",
+      "file": "../games/tiny/bin/tiny_conway.bin",
+      "card": "../art/cards/tiny_conway.png"
+    },
+    {
+      "name": "Nitro Nonsense",
+      "file": "../games/nitro_nonsense/bin/nitro_nonsense.bin",
+      "card": "../games/nitro_nonsense/assets/menu-card.png",
+      "data": {
+        "file": "../games/nitro_nonsense/bin/nitro_nonsense.region",
+        "at": "0x00800"
+      }
+    }
+  ],
+  "test_scratch": false
+}

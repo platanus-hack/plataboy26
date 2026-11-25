@@ -1,0 +1,86 @@
+{
+  "comment": "library.json with MicroCity (jhhoward, GPL-3.0) added: make microcity. MicroCity's data region and save slot (0x1F600..0x1FA6B, past the 2 KiB save area) are fixed addresses: games/microcity/port/platform.cpp. Programs in the EEPROM library, in menu order. file: a .bin built for this console (word 0 = j reset_handler, as games/template produces), max. 15424 bytes. flags: tool = listed with a * mark.",
+  "programs": [
+    {
+      "name": "Tiny Invaders",
+      "file": "../sim/web/roms/tiny_invaders.bin"
+    },
+    {
+      "name": "Tiny Arkanoid",
+      "file": "../sim/web/roms/tiny_arkanoid.bin"
+    },
+    {
+      "name": "Tiny Pacman",
+      "file": "../sim/web/roms/tiny_pacman.bin",
+      "card": "../art/cards/tiny_pacman.png"
+    },
+    {
+      "name": "Tiny Tris",
+      "file": "../sim/web/roms/tiny_tris.bin"
+    },
+    {
+      "name": "Tiny Boulder",
+      "file": "../sim/web/roms/tiny_boulder.bin"
+    },
+    {
+      "name": "Tiny Bubble",
+      "file": "../sim/web/roms/tiny_bubble.bin"
+    },
+    {
+      "name": "Tiny Doom",
+      "file": "../sim/web/roms/tiny_doom.bin"
+    },
+    {
+      "name": "Tiny Karate",
+      "file": "../sim/web/roms/tiny_karate.bin"
+    },
+    {
+      "name": "Tiny Lander",
+      "file": "../sim/web/roms/tiny_lander.bin"
+    },
+    {
+      "name": "Tiny Run",
+      "file": "../sim/web/roms/tiny_run.bin"
+    },
+    {
+      "name": "Tiny Shooter",
+      "file": "../sim/web/roms/tiny_shooter.bin"
+    },
+    {
+      "name": "Tiny Conway",
+      "file": "../sim/web/roms/tiny_conway.bin"
+    },
+    {
+      "name": "Hopper",
+      "file": "../sim/web/roms/hopper.bin",
+      "card": "../art/cards/hopper.png"
+    },
+    {
+      "name": "MicroCity",
+      "file": "../sim/web/roms/microcity.bin",
+      "card": "../art/cards/microcity.png",
+      "data": {
+        "file": "../sim/web/roms/microcity.region",
+        "at": "0x179A0"
+      },
+      "save": {
+        "at": "0x1F600",
+        "size": "0x46C"
+      }
+    },
+    {
+      "name": "Board Test",
+      "file": "../sim/web/roms/board_test.bin",
+      "flags": [
+        "tool"
+      ]
+    },
+    {
+      "name": "Calibrator",
+      "file": "../sim/web/roms/calibrator.bin",
+      "flags": [
+        "tool"
+      ]
+    }
+  ]
+}

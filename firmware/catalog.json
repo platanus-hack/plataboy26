@@ -1,0 +1,139 @@
+{
+  "comment": "Every program the picker (make pick, tools/pick.py) offers, as library entries: file, card, data region and save slot as in the library files. The data regions are fixed addresses the games were built for. build: how to make the file when it is missing. test_scratch: the program writes the EEPROM test pages 0x0FF00-0x100FF, which are then kept free.",
+  "programs": [
+    {
+      "name": "Llegamos tarde",
+      "file": "../games/llegamostarde/bin/llegamostarde.bin",
+      "build": "sh fetch.sh && make, in games/llegamostarde",
+      "card": "../art/cards/llegamostarde.png"
+    },
+    {
+      "name": "Arduventure",
+      "file": "../games/arduventure/bin/arduventure.bin",
+      "build": "sh fetch.sh && make, in games/arduventure",
+      "data": {
+        "file": "../games/arduventure/bin/arduventure.region",
+        "at": "0x197C2"
+      }
+    },
+    {
+      "name": "MicroCity",
+      "file": "../games/microcity/bin/microcity.bin",
+      "build": "sh fetch.sh && make, in games/microcity",
+      "card": "../art/cards/microcity.png",
+      "data": {
+        "file": "../games/microcity/bin/microcity.region",
+        "at": "0x179A0"
+      },
+      "save": {
+        "at": "0x1F600",
+        "size": "0x46C"
+      }
+    },
+    {
+      "name": "Just One Boss",
+      "file": "../games/justoneboss/bin/justoneboss.bin",
+      "build": "sh fetch.sh && make, in games/justoneboss",
+      "card": "../art/cards/justoneboss.png",
+      "data": {
+        "file": "../games/justoneboss/bin/justoneboss.region",
+        "at": "0xE4C0"
+      }
+    },
+    {
+      "name": "Hopper",
+      "file": "../games/hopper/bin/hopper.bin",
+      "build": "make -C games/hopper",
+      "card": "../art/cards/hopper.png"
+    },
+    {
+      "name": "Nitro Nonsense",
+      "file": "../games/nitro_nonsense/bin/nitro_nonsense.bin",
+      "build": "make -C games/nitro_nonsense",
+      "card": "../games/nitro_nonsense/assets/menu-card.png",
+      "data": {
+        "file": "../games/nitro_nonsense/bin/nitro_nonsense.region",
+        "at": "0x00800"
+      }
+    },
+    {
+      "name": "Tiny Lander",
+      "file": "../games/tiny/bin/tiny_lander.bin",
+      "build": "make -C games/tiny (needs ref/CH32V003-GameConsole)"
+    },
+    {
+      "name": "Tiny Conway",
+      "file": "../games/tiny/bin/tiny_conway.bin",
+      "build": "make -C games/tiny (needs ref/CH32V003-GameConsole)",
+      "card": "../art/cards/tiny_conway.png"
+    },
+    {
+      "name": "Tiny Invaders",
+      "file": "../games/tiny/bin/tiny_invaders.bin",
+      "build": "make -C games/tiny (needs ref/CH32V003-GameConsole)"
+    },
+    {
+      "name": "Tiny Arkanoid",
+      "file": "../games/tiny/bin/tiny_arkanoid.bin",
+      "build": "make -C games/tiny (needs ref/CH32V003-GameConsole)"
+    },
+    {
+      "name": "Tiny Pacman",
+      "file": "../games/tiny/bin/tiny_pacman.bin",
+      "build": "make -C games/tiny (needs ref/CH32V003-GameConsole)",
+      "card": "../art/cards/tiny_pacman.png"
+    },
+    {
+      "name": "Tiny Tris",
+      "file": "../games/tiny/bin/tiny_tris.bin",
+      "build": "make -C games/tiny (needs ref/CH32V003-GameConsole)"
+    },
+    {
+      "name": "Tiny Boulder",
+      "file": "../games/tiny/bin/tiny_boulder.bin",
+      "build": "make -C games/tiny (needs ref/CH32V003-GameConsole)"
+    },
+    {
+      "name": "Tiny Bubble",
+      "file": "../games/tiny/bin/tiny_bubble.bin",
+      "build": "make -C games/tiny (needs ref/CH32V003-GameConsole)"
+    },
+    {
+      "name": "Tiny Doom",
+      "file": "../games/tiny/bin/tiny_doom.bin",
+      "build": "make -C games/tiny (needs ref/CH32V003-GameConsole)"
+    },
+    {
+      "name": "Tiny Karate",
+      "file": "../games/tiny/bin/tiny_karate.bin",
+      "build": "make -C games/tiny (needs ref/CH32V003-GameConsole)"
+    },
+    {
+      "name": "Tiny Run",
+      "file": "../games/tiny/bin/tiny_run.bin",
+      "build": "make -C games/tiny (needs ref/CH32V003-GameConsole)"
+    },
+    {
+      "name": "Tiny Shooter",
+      "file": "../games/tiny/bin/tiny_shooter.bin",
+      "build": "make -C games/tiny (needs ref/CH32V003-GameConsole)"
+    },
+    {
+      "name": "Board Test",
+      "file": "../games/board_test/bin/board_test.bin",
+      "build": "make -C games/board_test",
+      "flags": [
+        "tool"
+      ],
+      "test_scratch": true
+    },
+    {
+      "name": "Calibrator",
+      "file": "../sim/web/roms/calibrator.bin",
+      "build": "prebuilt",
+      "flags": [
+        "tool"
+      ]
+    }
+  ]
+}

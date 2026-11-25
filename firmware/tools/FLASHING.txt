@@ -1,0 +1,50 @@
+plataboy26: flashing a board
+============================
+
+This folder holds a built game library and the scripts that put it on a board. Nothing
+here needs to be compiled, and it contains no programs: only data files and two scripts
+you can read.
+
+  flash.bin        the firmware (menu + loader), 16 KiB, for the MCU
+  writer/          the EEPROM contents in chunks; each chunk is a small program for the
+                   console that writes itself into the EEPROM when it runs
+  eeprom.bin       the whole 128 KiB EEPROM image, for reference (and for the simulator)
+  library.txt      the games in this library and the space they take
+  flash.sh         the script for Linux / macOS
+  flash.bat        the script for Windows
+
+You need a WCH-LinkE programmer in RISC-V mode, wired to the board's three programming
+pads: VCC (3V3), GND and DIO (SWDIO). Switch the board on.
+
+The scripts call a flashing tool that you install yourself; neither includes nor
+downloads one. Two open-source tools work, on every system:
+
+  rvprog   pip install rvprog          (Python; by the author of the original console)
+  wlink    github.com/ch32-rs/wlink    (put it in the PATH or in this folder)
+
+On Windows
+----------
+1. Install one of the tools. For rvprog: Python from python.org, then "pip install rvprog".
+2. Driver, once:
+     for rvprog: install the WinUSB driver over the WCH-Link's interface 1 with Zadig
+                 (zadig.akeo.ie), if the programmer is not found without it
+     for wlink:  install WCH-LinkUtility (wch-ic.com), which brings the WCH-Link driver
+3. Double-click flash.bat (or run it from a command prompt), connect a board, press a
+   key and wait for DONE. Repeat for the next board.
+
+On Linux / macOS
+----------------
+1. Install one of the tools.
+2. Linux only, once, so that the programmer can be used without root:
+     echo 'SUBSYSTEM=="usb", ATTR{idVendor}=="1a86", ATTR{idProduct}=="8010", MODE="666"' | sudo tee /etc/udev/rules.d/99-WCH-LinkE.rules
+     echo 'SUBSYSTEM=="usb", ATTR{idVendor}=="1a86", ATTR{idProduct}=="8012", MODE="666"' | sudo tee -a /etc/udev/rules.d/99-WCH-LinkE.rules
+     sudo udevadm control --reload-rules
+   then unplug and plug the programmer again.
+3. sh flash.sh            board after board, Enter to start each
+   sh flash.sh --once     one board, then exit
+
+What you see
+------------
+Each chunk shows "CHUNK n/N ... OK" on the screen with a short beep. "FAILED" and a long
+beep mean that chunk did not reach the EEPROM: flash that board again from the start.
+After flash.bin the game menu appears.
