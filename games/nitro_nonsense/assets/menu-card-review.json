@@ -1,0 +1,45 @@
+{
+  "reviewer": "powers_music_validation",
+  "scope": "Current source-bound final production title artwork and unchanged-selector real MCU input; user and physical acceptance pending",
+  "method": "Each exact final native and 4x PNG opened individually with view_image at original resolution",
+  "composition": "Production title/car rows 0..51; black rows 52..63 reserve the selector badge",
+  "sourceReceipt": "menu-card-source.json",
+  "images": [
+    {
+      "file": "menu-card.png",
+      "sha256": "7917c793b68dfb9458d648925fb161c79bdf16ac3426d9ce57872a5c67a60aac"
+    },
+    {
+      "file": "menu-card-preview.png",
+      "sha256": "ceade3e42e40d340b0284dc08b81f99180129a30099a8c58005efc679d0f12fa"
+    }
+  ],
+  "selectorEvidence": "../docs/evidence/fixed-powers/selector-report.json",
+  "remaining": [
+    "Root independently inspects exact final images before PR publication",
+    "Physical display, cable and deployment validation unavailable"
+  ],
+  "visualFindings": {
+    "native128x64": "PASS: NANO NITRO NONSENSE, complete rear car, flags and speed streaks readable; footer clear",
+    "preview512x256": "PASS: exact sharp 4x pixels; complete title/car with no clipping",
+    "selector": "PASS: exact tracked native and 4x captures individually inspected; full title/car readable and 17/17 badge clear in reserved footer",
+    "latestFinalReinspection": "PASS all six exact final native/4x cover, selector and title images individually opened; cosmetic refinement title/cover pixels unchanged"
+  },
+  "actualTitleEvidence": "../docs/evidence/fixed-powers/title-report.json",
+  "actualTitleBitmapComparison": "PASS all8192 positions, final actual MCU public-B solo boot; OLED lit level162",
+  "sourceSha256": {
+    "src/game.c": "72bf18aa5af66a0ea53cd6d69aae5ff6faa48ee5cb9942010e768c5d1f924798",
+    "src/minimal_game.inc": "e468bd009a8ee59f934af9a02dc714b761308aba374c30c69109023edbd6311c",
+    "src/game.h": "cf0f26595d8c6125ef59eaa3a97f9991ed6bcb64d7c93066c633d1a01d39addb",
+    "src/power_catalog.h": "640b6b405e158919896c004b830ec9be032d5e5ac66e8d64b01385833731b20e",
+    "src/overlay.h": "32e164b82efe60221d37d248a9ef1a0d0128f427a0071acafdab6d06d708a9ac",
+    "src/track.c": "637ff6f58e378eb393942a5954f69f50a18230dbe948001c86e0da9a54510250",
+    "tools/build_card.py": "9f5257061c90b6d8c88ef3568893cdc8c29241bb7acd040a71456ed30bdd05da"
+  },
+  "latestBuildResidentSha256": "d58e9c27efc8ec1deaa1e0e407ee691a6b84863239f5d218f9565f9b65675900",
+  "latestResourceBytes": 14272,
+  "latestTitleEvidence": "../docs/evidence/fixed-powers/title-report.json",
+  "latestSelectorEvidence": "../docs/evidence/fixed-powers/selector-report.json",
+  "latestBuildId": "18fdba4c30802046f4c4c60cd0fb0d1c2c38babac29eb5fc9e7247795e53f5d4",
+  "sourceReceiptSha256": "9aea28d8ad2177791cd18c799593bd3207bec0bd8c84938d393929644d8e7201"
+}

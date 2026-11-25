@@ -1,0 +1,1736 @@
+diff --git a/Source/MicroCity/Building.cpp b/Source/MicroCity/Building.cpp
+index 974c6b8..53dc4d7 100644
+--- a/Source/MicroCity/Building.cpp
++++ b/Source/MicroCity/Building.cpp
+@@ -34,7 +34,7 @@ const BuildingInfo* GetBuildingInfo(uint8_t buildingType)
+ 	return &BuildingMetaData[buildingType];
+ }
+ 
+-bool PlaceBuilding(uint8_t buildingType, uint8_t x, uint8_t y)
++GAME_CODE bool PlaceBuilding(uint8_t buildingType, uint8_t x, uint8_t y)
+ {
+ 	int index = 0;
+ 
+@@ -113,7 +113,7 @@ bool PlaceBuilding(uint8_t buildingType, uint8_t x, uint8_t y)
+ 	return true;
+ }
+ 
+-bool CanPlaceBuilding(uint8_t buildingType, uint8_t x, uint8_t y)
++GAME_CODE bool CanPlaceBuilding(uint8_t buildingType, uint8_t x, uint8_t y)
+ {
+ 	const BuildingInfo* metadata = GetBuildingInfo(buildingType);
+ 	uint8_t width = pgm_read_byte(&metadata->width);
+@@ -183,7 +183,7 @@ Building* GetBuilding(uint8_t x, uint8_t y)
+ 	return nullptr;
+ }
+ 
+-void DestroyBuilding(Building* building)
++GAME_CODE void DestroyBuilding(Building* building)
+ {
+ 	const BuildingInfo* info = GetBuildingInfo(building->type);
+ 	uint8_t width = pgm_read_byte(&info->width);
+diff --git a/Source/MicroCity/Connectivity.cpp b/Source/MicroCity/Connectivity.cpp
+index af8f7b2..35959ec 100644
+--- a/Source/MicroCity/Connectivity.cpp
++++ b/Source/MicroCity/Connectivity.cpp
+@@ -2,7 +2,6 @@
+ #include "Connectivity.h"
+ #include "Building.h"
+ 
+-void PowerFloodFill(uint8_t x, uint8_t y);
+ uint8_t* GetPowerGrid();
+ 
+ uint8_t GetConnections(int x, int y)
+@@ -69,7 +68,7 @@ uint8_t GetNeighbouringConnectivity(int x, int y, uint8_t mask)
+ 	return neighbourMask;
+ }
+ 
+-bool IsSuitableForBridgedTile(int x, int y, uint8_t mask)
++GAME_CODE bool IsSuitableForBridgedTile(int x, int y, uint8_t mask)
+ {
+ 	uint8_t neighbours = GetNeighbouringConnectivity(x, y, mask);
+ 	
+@@ -127,7 +126,11 @@ inline void SetTilePowered(uint8_t x, uint8_t y)
+ 	GetPowerGrid()[index >> 3] |= mask;
+ }
+ 
+-void CalculatePowerConnectivity()
++// Port: the power grid is found by sweeping the map until no powerline tile next to a
++// powered one is left unpowered (from the power plants' tiles), instead of upstream's
++// flood fills: the same tiles, in far less code (flash size) and without the fill
++// stack (RAM). Sweeps alternate between forwards and backwards.
++GAME_CODE void CalculatePowerConnectivity()
+ {
+ 	// Clear power from grid
+ 	for (int n = 0; n < MAP_WIDTH * MAP_HEIGHT / 8; n++)
+@@ -135,352 +138,45 @@ void CalculatePowerConnectivity()
+ 		GetPowerGrid()[n] = 0;
+ 	}
+ 
+-	// Flood fill from power plants
++	// Fill from power plants
+ 	for (int n = 0; n < MAX_BUILDINGS; n++)
+ 	{
+ 		if (State.buildings[n].type == Powerplant)
+ 		{
+-			PowerFloodFill(State.buildings[n].x, State.buildings[n].y);
++			SetTilePowered(State.buildings[n].x, State.buildings[n].y);
+ 		}
+ 	}
+ 
+-	// Set powered flags on buildings
+-	for (int n = 0; n < MAX_BUILDINGS; n++)
+-	{
+-		if (State.buildings[n].type)
+-		{
+-			State.buildings[n].hasPower = IsTilePowered(State.buildings[n].x, State.buildings[n].y);
+-		}
+-	}
+-}
+-
+-#ifdef USE_FIXED_MEMORY_FILL
+-
+-// Power flood fill method is based on the Wikipedia 'Fixed memory method (right hand fill method)'
+-enum
+-{
+-	FILL_NORTH = 0,
+-	FILL_NORTHEAST,
+-	FILL_EAST,
+-	FILL_SOUTHEAST,
+-	FILL_SOUTH,
+-	FILL_SOUTHWEST,
+-	FILL_WEST,
+-	FILL_NORTHWEST
+-};
+-
+-// If there is a powerline / building on this tile that hasn't been powered yet
+-bool IsFillEmpty(uint8_t x, uint8_t y)
+-{
+-	return (GetConnections(x, y) & PowerlineMask) != 0 && !IsTilePowered(x, y);
+-}
+-
+-uint8_t GetFilledNeighbourCount(uint8_t x, uint8_t y)
+-{
+-	uint8_t count = 0;
+-
+-	if (x == 0 || !IsFillEmpty(x - 1, y))
+-		count++;
+-	if (x == MAP_WIDTH - 1 || !IsFillEmpty(x + 1, y))
+-		count++;
+-	if (y == 0 || !IsFillEmpty(x, y - 1))
+-		count++;
+-	if (y == MAP_HEIGHT - 1 || !IsFillEmpty(x, y + 1))
+-		count++;
+-
+-	return count;
+-}
+-
+-bool IsFilledInDir(uint8_t x, uint8_t y, uint8_t dir)
+-{
+-	switch (dir)
++	bool changed;
++	uint8_t pass = 0;
++	do
+ 	{
+-	default:
+-	case FILL_NORTH:
+-		return y > 0 ? !IsFillEmpty(x, y - 1) : true;
+-	case FILL_NORTHEAST:
+-		return y > 0 && x < MAP_WIDTH - 1 ? !IsFillEmpty(x + 1, y - 1) : true;
+-	case FILL_EAST:
+-		return x < MAP_WIDTH - 1 ? !IsFillEmpty(x + 1, y) : true;
+-	case FILL_SOUTHEAST:
+-		return x < MAP_WIDTH - 1 && y < MAP_HEIGHT - 1 ? !IsFillEmpty(x + 1, y + 1) : true;
+-	case FILL_SOUTH:
+-		return y < MAP_HEIGHT - 1 ? !IsFillEmpty(x, y + 1) : true;
+-	case FILL_SOUTHWEST:
+-		return x > 0 && y < MAP_HEIGHT - 1 ? !IsFillEmpty(x - 1, y + 1) : true;
+-	case FILL_WEST:
+-		return x > 0 ? !IsFillEmpty(x - 1, y) : true;
+-	case FILL_NORTHWEST:
+-		return x > 0 && y > 0 ? !IsFillEmpty(x - 1, y - 1) : true;
+-	}
+-}
+-
+-uint8_t FillFrontLeft(uint8_t dir)
+-{
+-	return (dir - 1) & 7;
+-}
+-
+-uint8_t FillBackLeft(uint8_t dir)
+-{
+-	return (dir - 3) & 7;
+-}
+-
+-uint8_t FillTurnLeft(uint8_t dir)
+-{
+-	return (dir - 2) & 7;
+-}
+-
+-uint8_t FillTurnRight(uint8_t dir)
+-{
+-	return (dir + 2) & 7;
+-}
+-
+-uint8_t FillTurnAround(uint8_t dir)
+-{
+-	return (dir + 4) & 7;
+-}
+-
+-void FillMoveForward(uint8_t* x, uint8_t* y, uint8_t dir)
+-{
+-	switch (dir)
+-	{
+-	case FILL_NORTH:
+-		--(*y);
+-		break;
+-	case FILL_EAST:
+-		++(*x);
+-		break;
+-	case FILL_SOUTH:
+-		++(*y);
+-		break;
+-	case FILL_WEST:
+-		--(*x);
+-		break;
+-	}
+-}
+-
+-void PowerFloodFill(uint8_t x, uint8_t y)
+-{
+-	uint8_t fillDir = FILL_NORTH;
+-	uint8_t mark1X = 0xff, mark1Y = 0xff, mark1Dir = FILL_NORTH;
+-	uint8_t mark2X = 0xff, mark2Y = 0xff, mark2Dir = FILL_NORTH;
+-	bool mark1Set = false, mark2Set = false;
+-	bool backtrack = false;
+-	bool findloop = false;
+-
+-	// Move to edge
+-	while (y > 0 && IsFillEmpty(x, y - 1))
+-	{
+-		y--;
+-	}
+-
+-	goto Fill_Start;
+-
+-	while (1)
+-	{
+-		FillMoveForward(&x, &y, fillDir);
+-
+-		// If right pixel is empty
+-		if (IsFilledInDir(x, y, FillTurnRight(fillDir)) == false)
++		changed = false;
++		for (uint8_t j = 0; j < MAP_HEIGHT; j++)
+ 		{
+-			if (backtrack && !findloop &&
+-				(IsFilledInDir(x, y, fillDir) == false
+-					|| IsFilledInDir(x, y, FillTurnLeft(fillDir)) == false))
++			for (uint8_t i = 0; i < MAP_WIDTH; i++)
+ 			{
+-				findloop = true;
+-			}
+-
+-			// Turn right
+-			fillDir = FillTurnRight(fillDir);
+-
+-		Fill_Paint:
+-
+-			FillMoveForward(&x, &y, fillDir);
+-		}
+-
+-	Fill_Start:
+-		uint8_t filledNeighbourCount = GetFilledNeighbourCount(x, y);
+-		if (filledNeighbourCount == 4)
+-		{
+-			SetTilePowered(x, y);
+-			break;
+-		}
+-
+-		do
+-		{
+-			fillDir = FillTurnRight(fillDir);
+-		} while (IsFilledInDir(x, y, fillDir) == false);
+-		do
+-		{
+-			fillDir = FillTurnLeft(fillDir);
+-		} while (IsFilledInDir(x, y, fillDir) != false);
++				uint8_t x = (pass & 1) ? MAP_WIDTH - 1 - i : i;
++				uint8_t y = (pass & 1) ? MAP_HEIGHT - 1 - j : j;
+ 
+-		switch (filledNeighbourCount)
+-		{
+-		case 1:
+-			if (backtrack)
+-			{
+-				findloop = true;
+-			}
+-			else if (findloop)
+-			{
+-				mark1Set = true;
+-			}
+-			else if (IsFilledInDir(x, y, FillFrontLeft(fillDir)) == false
+-				&& IsFilledInDir(x, y, FillBackLeft(fillDir)) == false)
+-			{
+-				mark1Set = false;
+-				SetTilePowered(x, y);
+-				goto Fill_Paint;
+-			}
+-			break;
+-		case 2:
+-			if (IsFilledInDir(x, y, FillTurnAround(fillDir)) != false)
+-			{
+-				if (IsFilledInDir(x, y, FillFrontLeft(fillDir)) == false)
++				if ((GetConnections(x, y) & PowerlineMask) && !IsTilePowered(x, y)
++					&& ((x > 0 && IsTilePowered(x - 1, y)) || (x < MAP_WIDTH - 1 && IsTilePowered(x + 1, y))
++					|| (y > 0 && IsTilePowered(x, y - 1)) || (y < MAP_HEIGHT - 1 && IsTilePowered(x, y + 1))))
+ 				{
+-					mark1Set = false;
+ 					SetTilePowered(x, y);
+-					goto Fill_Paint;
+-				}
+-			}
+-			else if (!mark1Set)
+-			{
+-				mark1X = x;
+-				mark1Y = y;
+-				mark1Set = true;
+-				mark1Dir = fillDir;
+-				mark2Set = false;
+-				findloop = false;
+-				backtrack = false;
+-			}
+-			else
+-			{
+-				if (!mark2Set)
+-				{
+-					if (mark1Set && x == mark1X && y == mark1Y)
+-					{
+-						if (fillDir == mark1Dir)
+-						{
+-							mark1Set = false;
+-							fillDir = FillTurnAround(fillDir);
+-							SetTilePowered(x, y);
+-							goto Fill_Paint;
+-						}
+-						else
+-						{
+-							backtrack = true;
+-							findloop = false;
+-							fillDir = mark1Dir;
+-						}
+-					}
+-					else if (findloop)
+-					{
+-						mark2X = x;
+-						mark2Y = y;
+-						mark2Dir = fillDir;
+-						mark2Set = true;
+-					}
+-				}
+-				else
+-				{
+-					if (mark1Set && x == mark1X && y == mark1Y)
+-					{
+-						x = mark2X;
+-						y = mark2Y;
+-						fillDir = mark2Dir;
+-						mark1Set = false;
+-						mark2Set = false;
+-						backtrack = false;
+-						fillDir = FillTurnAround(fillDir);
+-						SetTilePowered(x, y);
+-						goto Fill_Paint;
+-					}
+-					else if (mark2Set && x == mark2X && y == mark2Y)
+-					{
+-						mark1X = x;
+-						mark1Y = y;
+-						mark1Set = true;
+-						fillDir = mark2Dir;
+-						mark1Dir = mark2Dir;
+-						mark2Set = false;
+-					}
++					changed = true;
+ 				}
+ 			}
+-			break;
+-		case 3:
+-			mark1Set = false;
+-			SetTilePowered(x, y);
+-			goto Fill_Paint;
+-			break;
+-		default:
+-			break;
+ 		}
+-	}
+-}
+-
+-#else
+-
+-#define STACK_PUSH(px, py) \
+-	*stackPtr++ = px; \
+-	*stackPtr++ = py; \
+-	stackSize++; \
+-
+-#define STACK_POP(px, py) \
+-	stackPtr--; py = *stackPtr; \
+-	stackPtr--; px = *stackPtr; \
+-	stackSize--;
+-
+-void PowerFloodFill(uint8_t x, uint8_t y)
+-{
+-	uint8_t* grid = (uint8_t*)GetPowerGrid();
+-	uint8_t* stackPtr = grid + (MAP_WIDTH * MAP_HEIGHT / 8);
+-	uint8_t stackSize = 0;
+-
+-	STACK_PUSH(x, y);
++		pass++;
++	} while (changed);
+ 
+-	while (stackSize)
++	// Set powered flags on buildings
++	for (int n = 0; n < MAX_BUILDINGS; n++)
+ 	{
+-		STACK_POP(x, y);
+-		int8_t y1 = y;
+-
+-		while (y1 >= 0 && (GetConnections(x, y1) & PowerlineMask) && !IsTilePowered(x, y1))
+-		{
+-			y1--;
+-		}
+-		y1++;
+-		bool spanLeft = false;
+-		bool spanRight = false;
+-		while (y1 < MAP_HEIGHT && (GetConnections(x, y1) & PowerlineMask) && !IsTilePowered(x, y1))
++		if (State.buildings[n].type)
+ 		{
+-			SetTilePowered(x, y1);
+-
+-			bool canFillLeft = (GetConnections(x - 1, y1) & PowerlineMask) && !IsTilePowered(x - 1, y1);
+-
+-			if (!spanLeft && x > 0 && canFillLeft)
+-			{
+-				STACK_PUSH(x - 1, y1);
+-				spanLeft = true;
+-			}
+-			else if (spanLeft && (x - 1 == 0 || !canFillLeft))
+-			{
+-				spanLeft = false;
+-			}
+-
+-			bool canFillRight = (GetConnections(x + 1, y1) & PowerlineMask) && !IsTilePowered(x + 1, y1);
+-
+-			if (!spanRight && canFillRight)
+-			{
+-				STACK_PUSH(x + 1, y1);
+-				spanRight = true;
+-			}
+-			else if (spanRight && x < MAP_WIDTH - 1 && !canFillRight)
+-			{
+-				spanRight = false;
+-			}
+-			y1++;
++			State.buildings[n].hasPower = IsTilePowered(State.buildings[n].x, State.buildings[n].y);
+ 		}
+ 	}
+ }
+-
+-#endif
+diff --git a/Source/MicroCity/Draw.cpp b/Source/MicroCity/Draw.cpp
+index 5db21a8..7522618 100644
+--- a/Source/MicroCity/Draw.cpp
++++ b/Source/MicroCity/Draw.cpp
+@@ -4,10 +4,9 @@
+ #include "Font.h"
+ #include "Strings.h"
+ 
+-const uint8_t TileImageData[] PROGMEM =
+-{
+-#include "TileData.h"
+-};
++// Port: TileData.h with its duplicate tiles stored once (flash size): TileImages holds
++// the distinct tiles, TileIndex the image of each tile (tools/tiles.py, build/TileSet.h)
++#include "TileSet.h"
+ 
+ #include "LogoBitmap.h"
+ 
+@@ -26,7 +25,7 @@ const uint8_t BuildingPopulaceMap[] PROGMEM =
+ 
+ const uint8_t* GetTileData(uint8_t tile)
+ {
+-	return TileImageData + (tile * 8);
++	return TileImages + pgm_read_byte(&TileIndex[tile]) * 8;
+ }
+ 
+ inline uint8_t GetProcAtTile(uint8_t x, uint8_t y)
+@@ -225,133 +224,55 @@ void ResetVisibleTileCache()
+ 
+ void DrawTiles()
+ {
++	// Port: the screen is drawn one page (8 rows) at a time (see Draw), a byte per
++	// column, from the cache rows that cover this page
++	uint8_t* page = GetPageBuffer();
++	uint8_t pageRow = GetDrawPage();
+ 	int tileX = 0;
+ 	int offsetX = UIState.scrollX & (TILE_SIZE - 1);
++	int offsetY = UIState.scrollY & (TILE_SIZE - 1);
++	const uint8_t* upper = GetTileData(GetCachedTile(tileX, pageRow));
++	const uint8_t* lower = GetTileData(GetCachedTile(tileX, pageRow + 1));
+ 
+ 	for (int col = 0; col < DISPLAY_WIDTH; col++)
+ 	{
+-		int tileY = 0;
+-		int offsetY = UIState.scrollY & (TILE_SIZE - 1);
+-		uint8_t currentTile = GetCachedTile(tileX, tileY);
+-		uint8_t readBuf = pgm_read_byte(&GetTileData(currentTile)[offsetX]);
+-		readBuf >>= offsetY;
+-
+-		for (int row = 0; row < DISPLAY_HEIGHT; row++)
+-		{
+-			PutPixel(col, row, readBuf & 1);
+-
+-			offsetY = (offsetY + 1) & 7;
+-			readBuf >>= 1;
+-
+-			if (!offsetY)
+-			{
+-				tileY++;
+-				currentTile = GetCachedTile(tileX, tileY);
+-				readBuf = pgm_read_byte(&GetTileData(currentTile)[offsetX]);
+-			}
+-		}
++		uint8_t readBuf = pgm_read_byte(&upper[offsetX]) >> offsetY;
++		if (offsetY)
++			readBuf |= pgm_read_byte(&lower[offsetX]) << (8 - offsetY);
++		page[col] = readBuf;
+ 
+ 		offsetX = (offsetX + 1) & 7;
+ 		if (!offsetX)
+ 		{
+ 			tileX++;
++			upper = GetTileData(GetCachedTile(tileX, pageRow));
++			lower = GetTileData(GetCachedTile(tileX, pageRow + 1));
+ 		}
+ 	}
+ }
+ 
+-void ScrollUp(int amount)
+-{
+-	CachedScrollY -= amount;
+-	int y = VISIBLE_TILES_Y - 1;
+-
+-	for (int n = 0; n < VISIBLE_TILES_Y - amount; n++)
+-	{
+-		for (int x = 0; x < VISIBLE_TILES_X; x++)
+-		{
+-			VisibleTileCache[y * VISIBLE_TILES_X + x] = VisibleTileCache[(y - amount) * VISIBLE_TILES_X + x];
+-		}
+-		y--;
+-	}
+-
+-	for (y = 0; y < amount; y++)
+-	{
+-		for (int x = 0; x < VISIBLE_TILES_X; x++)
+-		{
+-			VisibleTileCache[y * VISIBLE_TILES_X + x] = CalculateTile(x + CachedScrollX, y + CachedScrollY);
+-		}
+-	}
+-}
+-
+-void ScrollDown(int amount)
++// Port: upstream's ScrollUp/Down/Left/Right as one function (flash size): the cache
++// moves by (dx, dy) tiles, the rows and columns that come into view are calculated.
++// Cells are visited so that each one is read before it is overwritten.
++GAME_CODE void ScrollCache(int dx, int dy)
+ {
+-	CachedScrollY += amount;
+-	int y = 0;
++	CachedScrollX += dx;
++	CachedScrollY += dy;
+ 
+-	for (int n = 0; n < VISIBLE_TILES_Y - amount; n++)
++	for (int j = 0; j < VISIBLE_TILES_Y; j++)
+ 	{
+-		for (int x = 0; x < VISIBLE_TILES_X; x++)
++		int y = dy > 0 ? j : VISIBLE_TILES_Y - 1 - j;
++		for (int i = 0; i < VISIBLE_TILES_X; i++)
+ 		{
+-			VisibleTileCache[y * VISIBLE_TILES_X + x] = VisibleTileCache[(y + amount) * VISIBLE_TILES_X + x];
+-		}
+-		y++;
+-	}
++			int x = dx > 0 ? i : VISIBLE_TILES_X - 1 - i;
++			int fromX = x + dx, fromY = y + dy;
++			uint8_t* cell = &VisibleTileCache[y * VISIBLE_TILES_X + x];
+ 
+-	y = VISIBLE_TILES_Y - 1;
+-	for (int n = 0; n < amount; n++)
+-	{
+-		for (int x = 0; x < VISIBLE_TILES_X; x++)
+-		{
+-			VisibleTileCache[y * VISIBLE_TILES_X + x] = CalculateTile(x + CachedScrollX, y + CachedScrollY);
++			if (fromX >= 0 && fromX < VISIBLE_TILES_X && fromY >= 0 && fromY < VISIBLE_TILES_Y)
++				*cell = VisibleTileCache[fromY * VISIBLE_TILES_X + fromX];
++			else
++				*cell = CalculateTile(x + CachedScrollX, y + CachedScrollY);
+ 		}
+-		y--;
+-	}
+-}
+-
+-void ScrollLeft(int amount)
+-{
+-	CachedScrollX -= amount;
+-	int x = VISIBLE_TILES_X - 1;
+-
+-	for (int n = 0; n < VISIBLE_TILES_X - amount; n++)
+-	{
+-		for (int y = 0; y < VISIBLE_TILES_Y; y++)
+-		{
+-			VisibleTileCache[y * VISIBLE_TILES_X + x] = VisibleTileCache[y * VISIBLE_TILES_X + x - amount];
+-		}
+-		x--;
+-	}
+-
+-	for (x = 0; x < amount; x++)
+-	{
+-		for (int y = 0; y < VISIBLE_TILES_Y; y++)
+-		{
+-			VisibleTileCache[y * VISIBLE_TILES_X + x] = CalculateTile(x + CachedScrollX, y + CachedScrollY);
+-		}
+-	}
+-}
+-
+-void ScrollRight(int amount)
+-{
+-	CachedScrollX += amount;
+-	int x = 0;
+-
+-	for (int n = 0; n < VISIBLE_TILES_X - amount; n++)
+-	{
+-		for (int y = 0; y < VISIBLE_TILES_Y; y++)
+-		{
+-			VisibleTileCache[y * VISIBLE_TILES_X + x] = VisibleTileCache[y * VISIBLE_TILES_X + x + amount];
+-		}
+-		x++;
+-	}
+-
+-	x = VISIBLE_TILES_X - 1;
+-	for (int n = 0; n < amount; n++)
+-	{
+-		for (int y = 0; y < VISIBLE_TILES_Y; y++)
+-		{
+-			VisibleTileCache[y * VISIBLE_TILES_X + x] = CalculateTile(x + CachedScrollX, y + CachedScrollY);
+-		}
+-		x--;
+ 	}
+ }
+ 
+@@ -401,7 +322,7 @@ void DrawCursor()
+ 	}
+ }
+ 
+-void AnimatePowercuts()
++GAME_CODE void AnimatePowercuts()
+ {
+ 	bool showPowercut = (AnimationFrame & 8) != 0;
+ 
+@@ -527,17 +448,6 @@ void DrawTileAt(uint8_t tile, int x, int y)
+ 	}
+ }
+ 
+-void DrawFilledRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t colour)
+-{
+-	for (int j = 0; j < h; j++)
+-	{
+-		for (int i = 0; i < w; i++)
+-		{
+-			PutPixel(x + i, y + j, colour);
+-		}
+-	}
+-}
+-
+ void DrawRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t colour)
+ {
+ 	for (int j = 0; j < w; j++)
+@@ -627,7 +537,7 @@ void DrawUI()
+ 	DrawRect(DISPLAY_WIDTH - 2 - currencyStrLen * FONT_WIDTH, 0, currencyStrLen * FONT_WIDTH + 2, FONT_HEIGHT + 2, 1);
+ }
+ 
+-void DrawInGame()
++GAME_CODE void UpdateInGame()
+ {
+ 	// Check to see if scrolled to a new location and need to update the visible tile cache
+ 	int tileScrollX = UIState.scrollX >> TILE_SIZE_SHIFT;
+@@ -635,54 +545,29 @@ void DrawInGame()
+ 	int scrollDiffX = tileScrollX - CachedScrollX;
+ 	int scrollDiffY = tileScrollY - CachedScrollY;
+ 
+-	if (scrollDiffX < 0)
++	if (scrollDiffX <= -VISIBLE_TILES_X || scrollDiffX >= VISIBLE_TILES_X)
+ 	{
+-		if (scrollDiffX > -VISIBLE_TILES_X)
+-		{
+-			ScrollLeft(-scrollDiffX);
+-		}
+-		else
+-		{
+-			ResetVisibleTileCache();
+-		}
++		ResetVisibleTileCache();
+ 	}
+-	else if (scrollDiffX > 0)
++	else if (scrollDiffX)
+ 	{
+-		if (scrollDiffX < VISIBLE_TILES_X)
+-		{
+-			ScrollRight(scrollDiffX);
+-		}
+-		else
+-		{
+-			ResetVisibleTileCache();
+-		}
++		ScrollCache(scrollDiffX, 0);
+ 	}
+ 
+-	if (scrollDiffY < 0)
++	if (scrollDiffY <= -VISIBLE_TILES_Y || scrollDiffY >= VISIBLE_TILES_Y)
+ 	{
+-		if (scrollDiffY > -VISIBLE_TILES_Y)
+-		{
+-			ScrollUp(-scrollDiffY);
+-		}
+-		else
+-		{
+-			ResetVisibleTileCache();
+-		}
++		ResetVisibleTileCache();
+ 	}
+-	else if (scrollDiffY > 0)
++	else if (scrollDiffY)
+ 	{
+-		if (scrollDiffY < VISIBLE_TILES_Y)
+-		{
+-			ScrollDown(scrollDiffY);
+-		}
+-		else
+-		{
+-			ResetVisibleTileCache();
+-		}
++		ScrollCache(0, scrollDiffY);
+ 	}
+ 
+ 	AnimatePowercuts();
++}
+ 
++void DrawInGame()
++{
+ 	DrawTiles();
+ 
+ 	if (UIState.state == InGame || UIState.state == InGameDisaster)
+@@ -693,15 +578,15 @@ void DrawInGame()
+ 	DrawUI();
+ }
+ 
+-const char SaveCityStr[] PROGMEM = "Save City";
++const char SaveCityStr[] MENU_DATA = "Save City";
+ const char LoadCityStr[] PROGMEM = "Load City";
+ const char NewCityStr[] PROGMEM = "New City";
+-const char AutoBudgetStr[] PROGMEM = "Auto Budget:";
+-const char OnStr[] PROGMEM = "On";
+-const char OffStr[] PROGMEM = "Off";
+-const char TwitterStr[] PROGMEM = "by @jameshhoward";
++const char AutoBudgetStr[] MENU_DATA = "Auto Budget:";
++const char OnStr[] MENU_DATA = "On";
++const char OffStr[] MENU_DATA = "Off";
++const char TwitterStr[] TITLE_DATA = "by @jameshhoward";
+ 
+-void DrawSaveLoadMenu()
++MENU_CODE void DrawSaveLoadMenu()
+ {
+ 	const int menuWidth = 68;
+ 	const int menuHeight = 50;
+@@ -727,7 +612,7 @@ void DrawSaveLoadMenu()
+ 	DrawString(UIState.autoBudget ? OnStr : OffStr, x + 12 * FONT_WIDTH, y);
+ }
+ 
+-void DrawStartScreen()
++TITLE_CODE void DrawStartScreen()
+ {
+ 	const uint8_t logoWidth = 72;
+ 	const uint8_t logoHeight = 40;
+@@ -751,10 +636,10 @@ void DrawStartScreen()
+ 	DrawString(TwitterStr, x - FONT_WIDTH * 3, y);
+ }
+ 
+-const char LeftArrowStr[] PROGMEM = "<";
+-const char RightArrowStr[] PROGMEM = ">";
++const char LeftArrowStr[] TITLE_DATA = "<";
++const char RightArrowStr[] TITLE_DATA = ">";
+ 
+-void DrawNewCityMenu()
++TITLE_CODE void DrawNewCityMenu()
+ {
+ 	const uint8_t mapY = DISPLAY_HEIGHT / 2 - MAP_HEIGHT / 2 - 4;
+ 	DrawFilledRect(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, 1);
+@@ -768,15 +653,15 @@ void DrawNewCityMenu()
+ 	DrawString(RightArrowStr, DISPLAY_WIDTH / 2 + MAP_WIDTH / 2 + 6, DISPLAY_HEIGHT / 2 - FONT_HEIGHT / 2);
+ }
+ 
+-const char BudgetHeaderStr[] PROGMEM =		"Budget report for";
+-const char TaxRateStr[] PROGMEM =			"Tax rate         <   % >";
+-const char TaxesCollectedStr[] PROGMEM =	"Taxes collected";
+-const char PoliceBudgetStr[] PROGMEM =		"Police budget";
+-const char FireBudgetStr[] PROGMEM =		"Fire budget";
+-const char RoadBudgetStr[] PROGMEM =		"Road budget";
+-const char CashFlowStr[] PROGMEM =			"Cash flow";
++const char BudgetHeaderStr[] MENU_DATA =		"Budget report for";
++const char TaxRateStr[] MENU_DATA =			"Tax rate         <   % >";
++const char TaxesCollectedStr[] MENU_DATA =	"Taxes collected";
++const char PoliceBudgetStr[] MENU_DATA =		"Police budget";
++const char FireBudgetStr[] MENU_DATA =		"Fire budget";
++const char RoadBudgetStr[] MENU_DATA =		"Road budget";
++const char CashFlowStr[] MENU_DATA =			"Cash flow";
+ 
+-void DrawBudgetMenu()
++MENU_CODE void DrawBudgetMenu()
+ {
+ 	const int menuWidth = 100;
+ 	const int menuHeight = 56;
+@@ -817,36 +702,98 @@ void DrawBudgetMenu()
+ 	DrawString(CashFlowStr, x, y);
+ 	DrawCurrency(State.taxesCollected - State.roadBudget - State.policeBudget * FIRE_AND_POLICE_MAINTENANCE_COST - State.fireBudget * FIRE_AND_POLICE_MAINTENANCE_COST, x2, y);
+ 	y += spacing;
++}
+ 
+-	if (UIState.selection < MIN_BUDGET_DISPLAY_TIME)
+-	{
+-		UIState.selection++;
+-	}
++// Port: on the Arduboy the menus are drawn over the last game frame, still in the frame
++// buffer. Here there is none, so that frame is drawn again under them, with the state
++// it was drawn with (the year's budget report opens a month and a budget later, and
++// the view keeps moving towards the cursor).
++static uint8_t BackgroundState = InGame, BackgroundSelection, BackgroundFrame, BackgroundMonth;
++static uint16_t BackgroundYear;
++static int16_t BackgroundScrollX, BackgroundScrollY;
++static int32_t BackgroundMoney;
++
++MENU_CODE void DrawBackground()
++{
++	uint8_t state = UIState.state, selection = UIState.selection, frame = AnimationFrame, month = State.month;
++	uint16_t year = State.year;
++	int16_t scrollX = UIState.scrollX, scrollY = UIState.scrollY;
++	int32_t money = State.money;
++	UIState.state = BackgroundState;
++	UIState.selection = BackgroundSelection;
++	AnimationFrame = BackgroundFrame;
++	State.month = BackgroundMonth;
++	State.year = BackgroundYear;
++	State.money = BackgroundMoney;
++	UIState.scrollX = BackgroundScrollX;
++	UIState.scrollY = BackgroundScrollY;
++	DrawInGame();
++	UIState.state = state;
++	UIState.selection = selection;
++	AnimationFrame = frame;
++	State.month = month;
++	State.year = year;
++	State.money = money;
++	UIState.scrollX = scrollX;
++	UIState.scrollY = scrollY;
+ }
+ 
++// Port: what changes state happens once per frame, then the screen is drawn page by
++// page (8 rows each) into a 128 byte buffer and sent (BeginPage / EndPage)
+ void Draw()
+ {
++	LoadStateCode();
+ 	switch (UIState.state)
+ 	{
+-	case StartScreen:
+-		DrawStartScreen();
+-		break;
+-	case NewCityMenu:
+-		DrawNewCityMenu();
+-		break;
+ 	case InGame:
+ 	case InGameDisaster:
+ 	case ShowingToolbar:
+-		DrawInGame();
+-		break;
+-	case SaveLoadMenu:
+-		DrawSaveLoadMenu();
++		UpdateInGame();
++		BackgroundState = UIState.state;
++		BackgroundSelection = UIState.selection;
++		BackgroundFrame = AnimationFrame;
++		BackgroundMonth = State.month;
++		BackgroundYear = State.year;
++		BackgroundMoney = State.money;
++		BackgroundScrollX = UIState.scrollX;
++		BackgroundScrollY = UIState.scrollY;
+ 		break;
+ 	case BudgetMenu:
+-		DrawBudgetMenu();
++		if (UIState.selection < MIN_BUDGET_DISPLAY_TIME)
++		{
++			UIState.selection++;
++		}
+ 		break;
+ 	}
+ 
++	for (uint8_t page = 0; page < DISPLAY_HEIGHT / 8; page++)
++	{
++		BeginPage(page);
++		switch (UIState.state)
++		{
++		case StartScreen:
++			DrawStartScreen();
++			break;
++		case NewCityMenu:
++			DrawNewCityMenu();
++			break;
++		case InGame:
++		case InGameDisaster:
++		case ShowingToolbar:
++			DrawInGame();
++			break;
++		case SaveLoadMenu:
++			DrawBackground();
++			DrawSaveLoadMenu();
++			break;
++		case BudgetMenu:
++			DrawBackground();
++			DrawBudgetMenu();
++			break;
++		}
++		EndPage();
++	}
++
+ 	AnimationFrame++;
+ 
+ }
+diff --git a/Source/MicroCity/Draw.h b/Source/MicroCity/Draw.h
+index 240134a..6b43bb5 100644
+--- a/Source/MicroCity/Draw.h
++++ b/Source/MicroCity/Draw.h
+@@ -17,3 +17,9 @@ void RefreshTile(uint8_t x, uint8_t y);
+ void RefreshTileAndConnectedNeighbours(uint8_t x, uint8_t y);
+ 
+ void SetTile(uint8_t x, uint8_t y, uint8_t tile);
++
++// Port: page by page drawing (platform)
++void BeginPage(uint8_t page);
++void EndPage(void);
++uint8_t* GetPageBuffer(void);
++uint8_t GetDrawPage(void);
+diff --git a/Source/MicroCity/Font.cpp b/Source/MicroCity/Font.cpp
+index a413437..383b21a 100644
+--- a/Source/MicroCity/Font.cpp
++++ b/Source/MicroCity/Font.cpp
+@@ -134,85 +134,29 @@ static uint8_t PrintX, PrintY;
+ 
+ void DrawChar(char c)
+ {
++	// Port: the same pixels as upstream's unrolled version, as a loop (flash size).
++	// The glyph's 5 rows of 3 pixels, top first: data1 bits 7..0, data2 bit 1, data2
++	// bits 7..2; set bits are black on white. Column 3 and the 6th row (the first one
++	// for a descender) stay white.
+ 	const uint8_t index = ((unsigned char)(c)) - 32;
+ 	uint8_t data1 = pgm_read_byte(&font4x6[index][0]);
+ 	uint8_t data2 = pgm_read_byte(&font4x6[index][1]);
++	uint16_t bits = (data1 << 7) | ((data2 & 2) << 5) | (data2 >> 2);
+ 	uint8_t y = PrintY;
++	uint8_t blankRow = (data2 & 1) ? 0 : 5;
+ 
+-	if (data2 & 1)	// Descender e.g. j, g
++	for (uint8_t row = 0; row < 6; row++, y++)
+ 	{
+-		PutPixel(PrintX, y, 1);
+-		PutPixel(PrintX + 1, y, 1);
+-		PutPixel(PrintX + 2, y, 1);
+-		PutPixel(PrintX + 3, y, 1);
+-		y++;
+-
+-		PutPixel(PrintX, y, (data1 & 0x80) ? 0 : 1);
+-		PutPixel(PrintX + 1, y, (data1 & 0x40) ? 0 : 1);
+-		PutPixel(PrintX + 2, y, (data1 & 0x20) ? 0 : 1);
+-		PutPixel(PrintX + 3, y, 1);
+-		y++;
+-
+-		PutPixel(PrintX, y, (data1 & 0x10) ? 0 : 1);
+-		PutPixel(PrintX + 1, y, (data1 & 0x8) ? 0 : 1);
+-		PutPixel(PrintX + 2, y, (data1 & 0x4) ? 0 : 1);
+-		PutPixel(PrintX + 3, y, 1);
+-		y++;
+-
+-		PutPixel(PrintX, y, (data1 & 0x2) ? 0 : 1);
+-		PutPixel(PrintX + 1, y, (data1 & 0x1) ? 0 : 1);
+-		PutPixel(PrintX + 2, y, (data2 & 0x2) ? 0 : 1);
+-		PutPixel(PrintX + 3, y, 1);
+-		y++;
+-
+-		PutPixel(PrintX, y, (data2 & 0x80) ? 0 : 1);
+-		PutPixel(PrintX + 1, y, (data2 & 0x40) ? 0 : 1);
+-		PutPixel(PrintX + 2, y, (data2 & 0x20) ? 0 : 1);
+-		PutPixel(PrintX + 3, y, 1);
+-		y++;
+-
+-		PutPixel(PrintX, y, (data2 & 0x10) ? 0 : 1);
+-		PutPixel(PrintX + 1, y, (data2 & 0x8) ? 0 : 1);
+-		PutPixel(PrintX + 2, y, (data2 & 0x4) ? 0 : 1);
+-		PutPixel(PrintX + 3, y, 1);
+-		y++;
+-	}
+-	else
+-	{
+-		PutPixel(PrintX, y, (data1 & 0x80) ? 0 : 1);
+-		PutPixel(PrintX + 1, y, (data1 & 0x40) ? 0 : 1);
+-		PutPixel(PrintX + 2, y, (data1 & 0x20) ? 0 : 1);
+-		PutPixel(PrintX + 3, y, 1);
+-		y++;
+-
+-		PutPixel(PrintX, y, (data1 & 0x10) ? 0 : 1);
+-		PutPixel(PrintX + 1, y, (data1 & 0x8) ? 0 : 1);
+-		PutPixel(PrintX + 2, y, (data1 & 0x4) ? 0 : 1);
+-		PutPixel(PrintX + 3, y, 1);
+-		y++;
+-
+-		PutPixel(PrintX, y, (data1 & 0x2) ? 0 : 1);
+-		PutPixel(PrintX + 1, y, (data1 & 0x1) ? 0 : 1);
+-		PutPixel(PrintX + 2, y, (data2 & 0x2) ? 0 : 1);
+-		PutPixel(PrintX + 3, y, 1);
+-		y++;
+-
+-		PutPixel(PrintX, y, (data2 & 0x80) ? 0 : 1);
+-		PutPixel(PrintX + 1, y, (data2 & 0x40) ? 0 : 1);
+-		PutPixel(PrintX + 2, y, (data2 & 0x20) ? 0 : 1);
+-		PutPixel(PrintX + 3, y, 1);
+-		y++;
+-
+-		PutPixel(PrintX, y, (data2 & 0x10) ? 0 : 1);
+-		PutPixel(PrintX + 1, y, (data2 & 0x8) ? 0 : 1);
+-		PutPixel(PrintX + 2, y, (data2 & 0x4) ? 0 : 1);
+-		PutPixel(PrintX + 3, y, 1);
+-		y++;
+-
+-		PutPixel(PrintX, y, 1);
+-		PutPixel(PrintX + 1, y, 1);
+-		PutPixel(PrintX + 2, y, 1);
+-		PutPixel(PrintX + 3, y, 1);
++		for (uint8_t col = 0; col < 4; col++)
++		{
++			uint8_t colour = 1;
++			if (row != blankRow && col < 3)
++			{
++				colour = !(bits & 0x4000);
++				bits <<= 1;
++			}
++			PutPixel(PrintX + col, y, colour);
++		}
+ 	}
+ }
+ 
+diff --git a/Source/MicroCity/Game.cpp b/Source/MicroCity/Game.cpp
+index 6f8880e..7d94f3d 100644
+--- a/Source/MicroCity/Game.cpp
++++ b/Source/MicroCity/Game.cpp
+@@ -24,7 +24,7 @@ uint16_t GetRand()
+ 	return randVal - 1;
+ }
+ 
+-void InitGame()
++TITLE_CODE void InitGame()
+ {
+ 	uint8_t* ptr = (uint8_t*)(&State);
+ 	for (int n = 0; n < sizeof(GameState); n++)
+@@ -56,6 +56,7 @@ void TickGame()
+ {
+ 	if (UIState.state == InGame || UIState.state == ShowingToolbar)
+ 	{
++		LoadStateCode();
+ 		Simulate();
+ 	}
+ 	if (UIState.state == InGameDisaster)
+diff --git a/Source/MicroCity/Interface.cpp b/Source/MicroCity/Interface.cpp
+index b96757b..33141f9 100644
+--- a/Source/MicroCity/Interface.cpp
++++ b/Source/MicroCity/Interface.cpp
+@@ -67,7 +67,8 @@ void GetBuildingBrushLocation(BuildingType buildingType, uint8_t* outX, uint8_t*
+ 	}
+ }
+ 
+-void WrapMenuInput(uint8_t input, uint8_t numOptions)
++// Port: inlined, the title and the menus each have a copy in their group (flash size)
++__attribute__((always_inline)) inline void WrapMenuInput(uint8_t input, uint8_t numOptions)
+ {
+ 	if (input & INPUT_UP)
+ 	{
+@@ -103,154 +104,176 @@ void HandleMovementInput(uint8_t input)
+ 	}
+ }
+ 
+-void HandleInput(uint8_t input)
++// Port: one function per state (upstream: one if/else chain), so that each state's
++// code can go to its overlay group (LoadStateCode, platform)
++GAME_CODE void HandleToolbarInput(uint8_t input)
+ {
+-	if (UIState.state == ShowingToolbar)
++	if (input & INPUT_LEFT)
+ 	{
+-		if (input & INPUT_LEFT)
+-		{
+-			if (UIState.selection == 0)
+-			{
+-				UIState.selection = NUM_TOOLBAR_BUTTONS - 1;
+-			}
+-			else UIState.selection--;
+-		}
+-		if (input & INPUT_RIGHT)
++		if (UIState.selection == 0)
+ 		{
+-			if (UIState.selection == NUM_TOOLBAR_BUTTONS - 1)
+-			{
+-				UIState.selection = 0;
+-			}
+-			else UIState.selection++;
+-		}
+-		if (input & (INPUT_A | INPUT_B))
+-		{
+-			if (UIState.selection <= LastBuildingBrush)
+-			{
+-				UIState.brush = UIState.selection;
+-				UIState.state = InGame;
+-			}
+-			else if (UIState.selection == SaveLoadToolbarButton)
+-			{
+-				UIState.state = SaveLoadMenu;
+-				UIState.selection = 0;
+-			}
+-			else if (UIState.selection == BudgetToolbarButton)
+-			{
+-				UIState.state = BudgetMenu;
+-				UIState.selection = MIN_BUDGET_DISPLAY_TIME;
+-			}
++			UIState.selection = NUM_TOOLBAR_BUTTONS - 1;
+ 		}
++		else UIState.selection--;
+ 	}
+-	else if (UIState.state == InGameDisaster)
++	if (input & INPUT_RIGHT)
+ 	{
+-		HandleMovementInput(input);
++		if (UIState.selection == NUM_TOOLBAR_BUTTONS - 1)
++		{
++			UIState.selection = 0;
++		}
++		else UIState.selection++;
+ 	}
+-	else if (UIState.state == StartScreen)
++	if (input & (INPUT_A | INPUT_B))
+ 	{
+-		WrapMenuInput(input, 2);
+-		if (input & (INPUT_B))
++		if (UIState.selection <= LastBuildingBrush)
+ 		{
+-			switch (UIState.selection)
+-			{
+-			case 0:
+-				UIState.state = NewCityMenu;
+-				break;
+-			case 1:
+-				if (LoadCity())
+-				{
+-					UIState.state = InGame;
+-					ResetVisibleTileCache();
+-				}
+-				break;
+-			}
++			UIState.brush = UIState.selection;
++			UIState.state = InGame;
++		}
++		else if (UIState.selection == SaveLoadToolbarButton)
++		{
++			UIState.state = SaveLoadMenu;
++			UIState.selection = 0;
++		}
++		else if (UIState.selection == BudgetToolbarButton)
++		{
++			UIState.state = BudgetMenu;
++			UIState.selection = MIN_BUDGET_DISPLAY_TIME;
+ 		}
+ 	}
+-	else if (UIState.state == NewCityMenu)
++}
++
++void HandleDisasterInput(uint8_t input)
++{
++	HandleMovementInput(input);
++}
++
++TITLE_CODE void HandleStartScreenInput(uint8_t input)
++{
++	WrapMenuInput(input, 2);
++	if (input & (INPUT_B))
+ 	{
+-		if (input & INPUT_LEFT)
++		switch (UIState.selection)
+ 		{
+-			if (State.terrainType == 0)
++		case 0:
++			UIState.state = NewCityMenu;
++			break;
++		case 1:
++			if (LoadCity())
+ 			{
+-				State.terrainType = NUM_TERRAIN_TYPES - 1;
++				UIState.state = InGame;
++				ResetVisibleTileCache();
+ 			}
+-			else State.terrainType--;
++			break;
+ 		}
+-		if (input & INPUT_RIGHT)
++	}
++}
++
++TITLE_CODE void HandleNewCityInput(uint8_t input)
++{
++	if (input & INPUT_LEFT)
++	{
++		if (State.terrainType == 0)
+ 		{
+-			if (State.terrainType == NUM_TERRAIN_TYPES - 1)
+-			{
+-				State.terrainType = 0;
+-			}
+-			else State.terrainType++;
++			State.terrainType = NUM_TERRAIN_TYPES - 1;
+ 		}
+-		if (input & (INPUT_B))
++		else State.terrainType--;
++	}
++	if (input & INPUT_RIGHT)
++	{
++		if (State.terrainType == NUM_TERRAIN_TYPES - 1)
+ 		{
+-			uint8_t terrainType = State.terrainType;
+-			InitGame();
+-			State.terrainType = terrainType;
+-			ResetVisibleTileCache();
+-			UIState.state = InGame;
++			State.terrainType = 0;
+ 		}
++		else State.terrainType++;
+ 	}
+-	else if (UIState.state == SaveLoadMenu)
++	if (input & (INPUT_B))
+ 	{
+-		WrapMenuInput(input, 4);
+-		if (input & (INPUT_A))
++		uint8_t terrainType = State.terrainType;
++		InitGame();
++		State.terrainType = terrainType;
++		ResetVisibleTileCache();
++		UIState.state = InGame;
++	}
++}
++
++MENU_CODE void HandleSaveLoadInput(uint8_t input)
++{
++	WrapMenuInput(input, 4);
++	if (input & (INPUT_A))
++	{
++		UIState.state = InGame;
++	}
++	if (input & INPUT_B)
++	{
++		switch (UIState.selection)
+ 		{
++		case 0:
++			SaveCity();
+ 			UIState.state = InGame;
+-		}
+-		if (input & INPUT_B)
+-		{
+-			switch (UIState.selection)
++			break;
++		case 1:
++			if (LoadCity())
+ 			{
+-			case 0:
+-				SaveCity();
+ 				UIState.state = InGame;
+-				break;
+-			case 1:
+-				if (LoadCity())
+-				{
+-					UIState.state = InGame;
+-					ResetVisibleTileCache();
+-				}
+-				break;
+-			case 2:
+-				UIState.state = NewCityMenu;
+-				break;
+-			case 3:
+-				UIState.autoBudget = !UIState.autoBudget;
+-				break;
++				ResetVisibleTileCache();
+ 			}
++			break;
++		case 2:
++			UIState.state = NewCityMenu;
++			break;
++		case 3:
++			UIState.autoBudget = !UIState.autoBudget;
++			break;
+ 		}
+ 	}
+-	else if (UIState.state == InGame)
+-	{
+-		HandleMovementInput(input);
++}
+ 
+-		if (input & INPUT_A)
+-		{
+-			UIState.state = ShowingToolbar;
+-			UIState.selection = UIState.brush;
+-		}
++GAME_CODE void HandleInGameInput(uint8_t input)
++{
++	HandleMovementInput(input);
++
++	if (input & INPUT_A)
++	{
++		UIState.state = ShowingToolbar;
++		UIState.selection = UIState.brush;
++	}
+ 
+-		if (input & INPUT_B)
++	if (input & INPUT_B)
++	{
++		if (UIState.brush == Bulldozer)
+ 		{
+-			if (UIState.brush == Bulldozer)
++			Building* building = GetBuilding(UIState.selectX, UIState.selectY);
++			if (building && !IsRubble(building->type))
+ 			{
+-				Building* building = GetBuilding(UIState.selectX, UIState.selectY);
+-				if (building && !IsRubble(building->type))
++				const BuildingInfo* buildingInfo = GetBuildingInfo(building->type);
++				uint8_t width = pgm_read_byte(&buildingInfo->width);
++				uint8_t height = pgm_read_byte(&buildingInfo->height);
++				int cost = width * height * BULLDOZER_COST;
++
++				if (State.money >= cost)
+ 				{
+-					const BuildingInfo* buildingInfo = GetBuildingInfo(building->type);
+-					uint8_t width = pgm_read_byte(&buildingInfo->width);
+-					uint8_t height = pgm_read_byte(&buildingInfo->height);
+-					int cost = width * height * BULLDOZER_COST;
++					State.money -= cost;
+ 
+-					if (State.money >= cost)
++					DestroyBuilding(building);
++				}
++				else
++				{
++					// TODO: not enough cash
++				}
++			}
++			else
++			{
++				if (GetConnections(UIState.selectX, UIState.selectY))
++				{
++					if (State.money >= BULLDOZER_COST)
+ 					{
+-						State.money -= cost;
++						State.money -= BULLDOZER_COST;
+ 
+-						DestroyBuilding(building);
++						SetConnections(UIState.selectX, UIState.selectY, 0);
++						RefreshTileAndConnectedNeighbours(UIState.selectX, UIState.selectY);
++						SetTile(UIState.selectX, UIState.selectY, RUBBLE_TILE);
+ 					}
+ 					else
+ 					{
+@@ -259,123 +282,135 @@ void HandleInput(uint8_t input)
+ 				}
+ 				else
+ 				{
+-					if (GetConnections(UIState.selectX, UIState.selectY))
+-					{
+-						if (State.money >= BULLDOZER_COST)
+-						{
+-							State.money -= BULLDOZER_COST;
+-
+-							SetConnections(UIState.selectX, UIState.selectY, 0);
+-							RefreshTileAndConnectedNeighbours(UIState.selectX, UIState.selectY);
+-							SetTile(UIState.selectX, UIState.selectY, RUBBLE_TILE);
+-						}
+-						else
+-						{
+-							// TODO: not enough cash
+-						}
+-					}
+-					else
+-					{
+-						// TODO: nothing to bulldoze
+-					}
++					// TODO: nothing to bulldoze
+ 				}
+ 			}
+-			else if (UIState.brush < FirstBuildingBrush)
+-			{
+-				// Is powerline or road
++		}
++		else if (UIState.brush < FirstBuildingBrush)
++		{
++			// Is powerline or road
+ 
+-				Building* building = GetBuilding(UIState.selectX, UIState.selectY);
+-				if (building && !IsRubble(building->type))
+-				{
+-					// TODO: can't build here
+-				}
+-				else
++			Building* building = GetBuilding(UIState.selectX, UIState.selectY);
++			if (building && !IsRubble(building->type))
++			{
++				// TODO: can't build here
++			}
++			else
++			{
++				int cost = UIState.brush == RoadBrush ? ROAD_COST : POWERLINE_COST;
++				uint8_t mask = UIState.brush == RoadBrush ? RoadMask : PowerlineMask;
++				uint8_t currentConnections = GetConnections(UIState.selectX, UIState.selectY);
++				bool onGround =  IsTerrainClear(UIState.selectX, UIState.selectY);
++				
++				if(onGround || (currentConnections == 0 && IsSuitableForBridgedTile(UIState.selectX, UIState.selectY, mask)))
+ 				{
+-					int cost = UIState.brush == RoadBrush ? ROAD_COST : POWERLINE_COST;
+-					uint8_t mask = UIState.brush == RoadBrush ? RoadMask : PowerlineMask;
+-					uint8_t currentConnections = GetConnections(UIState.selectX, UIState.selectY);
+-					bool onGround =  IsTerrainClear(UIState.selectX, UIState.selectY);
+-					
+-					if(onGround || (currentConnections == 0 && IsSuitableForBridgedTile(UIState.selectX, UIState.selectY, mask)))
++					if ((currentConnections & mask) == 0)
+ 					{
+-						if ((currentConnections & mask) == 0)
++						if (State.money >= cost)
+ 						{
+-							if (State.money >= cost)
+-							{
+-								State.money -= cost;
+-								SetConnections(UIState.selectX, UIState.selectY, currentConnections | mask);
+-
+-								// Remove rubble
+-								if (building)
+-								{
+-									building->type = 0;
+-								}
++							State.money -= cost;
++							SetConnections(UIState.selectX, UIState.selectY, currentConnections | mask);
+ 
+-								RefreshTileAndConnectedNeighbours(UIState.selectX, UIState.selectY);
+-							}
+-							else
++							// Remove rubble
++							if (building)
+ 							{
+-								// TODO: not enough cash
++								building->type = 0;
+ 							}
++
++							RefreshTileAndConnectedNeighbours(UIState.selectX, UIState.selectY);
++						}
++						else
++						{
++							// TODO: not enough cash
+ 						}
+ 					}
+ 				}
+ 			}
+-			else
++		}
++		else
++		{
++			// Is building placement
++			BuildingType buildingType = (BuildingType)(UIState.brush - FirstBuildingBrush + 1);
++			const BuildingInfo* buildingInfo = GetBuildingInfo(buildingType);
++			uint8_t placeX, placeY;
++			GetBuildingBrushLocation(buildingType, &placeX, &placeY);
++			uint16_t cost = pgm_read_word(&buildingInfo->cost);
++
++			if (CanPlaceBuilding(buildingType, placeX, placeY))
+ 			{
+-				// Is building placement
+-				BuildingType buildingType = (BuildingType)(UIState.brush - FirstBuildingBrush + 1);
+-				const BuildingInfo* buildingInfo = GetBuildingInfo(buildingType);
+-				uint8_t placeX, placeY;
+-				GetBuildingBrushLocation(buildingType, &placeX, &placeY);
+-				uint16_t cost = pgm_read_word(&buildingInfo->cost);
+-
+-				if (CanPlaceBuilding(buildingType, placeX, placeY))
++				if (State.money >= cost)
+ 				{
+-					if (State.money >= cost)
++					if (PlaceBuilding(buildingType, placeX, placeY))
+ 					{
+-						if (PlaceBuilding(buildingType, placeX, placeY))
+-						{
+-							State.money -= cost;
+-						}
+-						else
+-						{
+-							// too many buildings
+-						}
++						State.money -= cost;
+ 					}
+ 					else
+ 					{
+-						// TODO: not enough cash
++						// too many buildings
+ 					}
+ 				}
+ 				else
+ 				{
+-					// TODO: cannot place here, e.g. obstructed
++					// TODO: not enough cash
+ 				}
+ 			}
++			else
++			{
++				// TODO: cannot place here, e.g. obstructed
++			}
+ 		}
+ 	}
+-	else if (UIState.state == BudgetMenu)
++}
++
++MENU_CODE void HandleBudgetInput(uint8_t input)
++{
++	// Display for a minimum of a few frames to prevent closing the budget menu by accident
++	if (UIState.selection >= MIN_BUDGET_DISPLAY_TIME)
+ 	{
+-		// Display for a minimum of a few frames to prevent closing the budget menu by accident
+-		if (UIState.selection >= MIN_BUDGET_DISPLAY_TIME)
++		if ((input & INPUT_LEFT) && State.taxRate > 0)
+ 		{
+-			if ((input & INPUT_LEFT) && State.taxRate > 0)
+-			{
+-				State.taxRate--;
+-			}
+-			if ((input & INPUT_RIGHT) && State.taxRate < 99)
+-			{
+-				State.taxRate++;
+-			}
+-			if (input & (INPUT_A | INPUT_B))
+-			{
+-				UIState.state = InGame;
+-			}
++			State.taxRate--;
++		}
++		if ((input & INPUT_RIGHT) && State.taxRate < 99)
++		{
++			State.taxRate++;
++		}
++		if (input & (INPUT_A | INPUT_B))
++		{
++			UIState.state = InGame;
+ 		}
+ 	}
+ }
+ 
++void HandleInput(uint8_t input)
++{
++	LoadStateCode();
++	switch (UIState.state)
++	{
++	case ShowingToolbar:
++		HandleToolbarInput(input);
++		break;
++	case InGameDisaster:
++		HandleDisasterInput(input);
++		break;
++	case StartScreen:
++		HandleStartScreenInput(input);
++		break;
++	case NewCityMenu:
++		HandleNewCityInput(input);
++		break;
++	case SaveLoadMenu:
++		HandleSaveLoadInput(input);
++		break;
++	case InGame:
++		HandleInGameInput(input);
++		break;
++	case BudgetMenu:
++		HandleBudgetInput(input);
++		break;
++	}
++}
++
+ void ProcessInput()
+ {
+ 	uint8_t input = GetInput();
+diff --git a/Source/MicroCity/Interface.h b/Source/MicroCity/Interface.h
+index 896f72c..c8e3e64 100644
+--- a/Source/MicroCity/Interface.h
++++ b/Source/MicroCity/Interface.h
+@@ -55,4 +55,7 @@ void UpdateInterface(void);
+ 
+ void GetBuildingBrushLocation(BuildingType buildingType, uint8_t* outX, uint8_t* outY);
+ 
++// Port: loads the code of the current state's overlay group (platform)
++void LoadStateCode(void);
++
+ 
+diff --git a/Source/MicroCity/LogoBitmap.h b/Source/MicroCity/LogoBitmap.h
+index a14e20b..6c5a55b 100644
+--- a/Source/MicroCity/LogoBitmap.h
++++ b/Source/MicroCity/LogoBitmap.h
+@@ -1,4 +1,4 @@
+-unsigned char const LogoBitmap[] PROGMEM =
++unsigned char const LogoBitmap[] TITLE_DATA =
+ {
+   // 72, 40
+   0x00, 0xfe, 0x02, 0xfa, 0x0a, 0xea, 0xea, 0xea, 
+diff --git a/Source/MicroCity/Simulation.cpp b/Source/MicroCity/Simulation.cpp
+index 68360dc..e74ec45 100644
+--- a/Source/MicroCity/Simulation.cpp
++++ b/Source/MicroCity/Simulation.cpp
+@@ -47,7 +47,7 @@ inline void DebugBuildingScore(Building* building, int score, int crime, int pol
+ #define SIM_FIRE_DEPT_BASE_INFLUENCE 64				// Higher means less influence
+ #define SIM_FIRE_DEPT_INFLUENCE_MULTIPLIER 5		// Higher means less influence (based on distance)
+ 
+-uint8_t GetNumRoadConnections(Building* building)
++GAME_CODE uint8_t GetNumRoadConnections(Building* building)
+ {
+ 	const BuildingInfo* info = GetBuildingInfo(building->type);
+ 	uint8_t width = pgm_read_byte(&info->width);
+@@ -98,14 +98,14 @@ uint8_t GetNumRoadConnections(Building* building)
+ 	return count;
+ }
+ 
+-uint8_t GetManhattanDistance(Building* a, Building* b)
++GAME_CODE uint8_t GetManhattanDistance(Building* a, Building* b)
+ {
+ 	uint8_t x = a->x > b->x ? a->x - b->x : b->x - a->x;
+ 	uint8_t y = a->y > b->y ? a->y - b->y : b->y - a->y;
+ 	return x + y;
+ }
+ 
+-void DoBudget()
++GAME_CODE void DoBudget()
+ {
+ 	// Collect taxes
+ 	int32_t totalPopulation = (State.residentialPopulation + State.commercialPopulation + State.residentialPopulation) * POPULATION_MULTIPLIER;
+@@ -166,7 +166,7 @@ void DoBudget()
+ 	}
+ }
+ 
+-bool SpreadFire(Building* building)
++GAME_CODE bool SpreadFire(Building* building)
+ {
+ 	const BuildingInfo* info = GetBuildingInfo(building->type);
+ 	uint8_t width = pgm_read_byte(&info->width);
+@@ -209,7 +209,7 @@ bool SpreadFire(Building* building)
+ 	return false;
+ }
+ 
+-void SimulateBuilding(Building* building)
++GAME_CODE void SimulateBuilding(Building* building)
+ {
+ 	int8_t populationDensityChange = 0;
+ 
+@@ -471,7 +471,7 @@ void SimulateBuilding(Building* building)
+ 	RefreshBuildingTiles(building);
+ }
+ 
+-void CountPopulation()
++GAME_CODE void CountPopulation()
+ {
+ 	State.residentialPopulation = State.industrialPopulation = State.commercialPopulation = 0;
+ 
+@@ -494,7 +494,7 @@ void CountPopulation()
+ 	}
+ }
+ 
+-void Simulate()
++GAME_CODE void Simulate()
+ {
+ 	if (State.simulationStep < MAX_BUILDINGS)
+ 	{
+@@ -533,7 +533,7 @@ void Simulate()
+ 	}
+ }
+ 
+-bool StartRandomFire()
++GAME_CODE bool StartRandomFire()
+ {
+ 	int attemptsLeft = MAX_BUILDINGS;
+ 
+diff --git a/Source/MicroCity/Terrain.cpp b/Source/MicroCity/Terrain.cpp
+index 1444ebe..45fd2a2 100644
+--- a/Source/MicroCity/Terrain.cpp
++++ b/Source/MicroCity/Terrain.cpp
+@@ -3,24 +3,26 @@
+ #include "Game.h"
+ #include "Defines.h"
+ 
+-const uint8_t Terrain1Data[] PROGMEM =
++// Port: the terrain maps are in the EEPROM (EEDATA, see port/avr/pgmspace.h); the one
++// asked for is loaded into RAM (LoadTerrain, platform)
++const uint8_t Terrain1Data[] EEDATA =
+ {
+ #include "Terrain1.inc.h"
+ };
+-const uint8_t Terrain2Data[] PROGMEM =
++const uint8_t Terrain2Data[] EEDATA =
+ {
+ #include "Terrain2.inc.h"
+ };
+-const uint8_t Terrain3Data[] PROGMEM =
++const uint8_t Terrain3Data[] EEDATA =
+ {
+ #include "Terrain3.inc.h"
+ };
+ 
+-const char Terrain1Str[] PROGMEM = "River";
+-const char Terrain2Str[] PROGMEM = "Island";
+-const char Terrain3Str[] PROGMEM = "Lake";
++const char Terrain1Str[] TITLE_DATA = "River";
++const char Terrain2Str[] TITLE_DATA = "Island";
++const char Terrain3Str[] TITLE_DATA = "Lake";
+ 
+-const char* GetTerrainDescription(uint8_t index)
++TITLE_CODE const char* GetTerrainDescription(uint8_t index)
+ {
+ 	switch (index)
+ 	{
+@@ -39,9 +41,9 @@ const uint8_t* GetTerrainData(uint8_t index)
+ 	switch (index)
+ 	{
+ 	default:
+-	case 0: return Terrain1Data;
+-	case 1: return Terrain2Data;
+-	case 2: return Terrain3Data;
++	case 0: return LoadTerrain(Terrain1Data);
++	case 1: return LoadTerrain(Terrain2Data);
++	case 2: return LoadTerrain(Terrain3Data);
+ 	}
+ 
+ }
+diff --git a/Source/MicroCity/Terrain.h b/Source/MicroCity/Terrain.h
+index 61f382d..f2a5bd5 100644
+--- a/Source/MicroCity/Terrain.h
++++ b/Source/MicroCity/Terrain.h
+@@ -5,3 +5,6 @@ bool IsTerrainClear(int x, int y);
+ 
+ const char* GetTerrainDescription(uint8_t index);
+ const uint8_t* GetTerrainData(uint8_t index);
++
++// Port: an EEDATA terrain map in RAM (platform)
++const uint8_t* LoadTerrain(const uint8_t* eeData);

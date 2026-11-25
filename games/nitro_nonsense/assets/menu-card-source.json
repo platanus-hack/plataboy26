@@ -1,0 +1,36 @@
+{
+  "title": "NANO NITRO NONSENSE",
+  "gameIdentity": "nitro_nonsense",
+  "libraryEntryName": "Nitro Nonsense",
+  "method": "Host-compiled production game_boot and game_draw, unmodified canonical Game",
+  "consoleExecution": "Not claimed; later actual-MCU title pixel comparison remains pending",
+  "sourceSha256": {
+    "src/game.c": "72bf18aa5af66a0ea53cd6d69aae5ff6faa48ee5cb9942010e768c5d1f924798",
+    "src/minimal_game.inc": "961321706b4fef13418057c9f68426e31c6dcadedb8a3f5c58b343d4f930bba6",
+    "src/game.h": "fd11a929f5e3ba34a44f631fa19b7129e8eecf31506b29610c0e1178dd86a547",
+    "src/power_catalog.h": "640b6b405e158919896c004b830ec9be032d5e5ac66e8d64b01385833731b20e",
+    "src/overlay.h": "32e164b82efe60221d37d248a9ef1a0d0128f427a0071acafdab6d06d708a9ac",
+    "src/track.c": "b2ecbf49403d063c79042d079ce978a7e39abaf38776a7e39a454613074e69c3",
+    "tools/build_card.py": "9f5257061c90b6d8c88ef3568893cdc8c29241bb7acd040a71456ed30bdd05da"
+  },
+  "pixelSha256": "32449a21c0f8df164606cbf5226a581524619e2ba9d711032c185d7aa51a5435",
+  "productionTitlePixelSha256": "3a198c39647c06dbdd9adb1ba9cbf62ca0db19d24e58f9b52e0cc49cfd23301e",
+  "composition": "Production title/car artwork rows 0..51; black footer rows 52..63 reserved for chooser badge",
+  "harnessSha256": "c02d9901d5f208100989dd036e2fc2d3bf87b4fc74cb435314a52f1319709de3",
+  "images": [
+    {
+      "file": "menu-card.png",
+      "width": 128,
+      "height": 64,
+      "sha256": "7917c793b68dfb9458d648925fb161c79bdf16ac3426d9ce57872a5c67a60aac"
+    },
+    {
+      "file": "menu-card-preview.png",
+      "width": 512,
+      "height": 256,
+      "sha256": "ceade3e42e40d340b0284dc08b81f99180129a30099a8c58005efc679d0f12fa"
+    }
+  ],
+  "libraryCardField": "../games/nitro_nonsense/assets/menu-card.png",
+  "preservation": "Card reference only; no existing entry, save, resource or published ROM changed"
+}
