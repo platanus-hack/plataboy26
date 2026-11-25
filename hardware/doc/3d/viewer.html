@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Console rev. 1.3 3D</title>
+<script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+<style>
+  :root { --bg: #f4f5f7; --fg: #111827; --muted: #4b5563; --accent: #c2410c; }
+  body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--fg); display: grid; grid-template-columns: 1fr 340px; height: 100vh; }
+  model-viewer { width: 100%; height: 100vh; background: radial-gradient(#fff, #d9dce3); }
+  aside { padding: 20px; overflow: auto; border-left: 1px solid #d1d5db; background: #fff; }
+  h1 { font-size: 18px; margin: 0 0 4px; } p { color: var(--muted); font-size: 13px; line-height: 1.45; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0 16px; }
+  td { padding: 4px 0; border-bottom: 1px solid #eee; } td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 14px 0 0; }
+  .hi td { color: var(--accent); font-weight: 600; }
+  button { font: inherit; font-size: 13px; padding: 6px 10px; margin: 0 4px 4px 0; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; cursor: pointer; }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  @media (max-width: 800px) { body { grid-template-columns: 1fr; height: auto; } model-viewer { height: 70vh; } }
+</style>
+</head>
+<body>
+<model-viewer src="console_v1.3.glb" camera-controls touch-action="pan-y" shadow-intensity="1"
+  camera-orbit="-30deg 55deg auto" exposure="1.1" alt="CH32V003 game console rev. 1.3"></model-viewer>
+<aside>
+  <h1>CH32V003 Game Console rev. 1.3</h1>
+  <p>Drag to rotate, scroll to zoom. Heights are measured from the 3D models (LCSC models for
+  every assembled part; the OLED module is modelled from typical 0.96 in module dimensions on a
+  2.5 mm pin-header spacer).</p>
+  <p><button onclick="view('-30deg 55deg auto')">Front</button>
+     <button onclick="view('150deg 125deg auto')">Back (banana plaque)</button>
+     <button onclick="view('0deg 90deg auto')">Side</button></p>
+  <h2>Front (above the board)</h2>
+  <table>
+    <tr class="hi"><td>Programming header H2</td><td>8.5 mm</td></tr>
+    <tr><td>Buttons A, B, D-pad (6×6 mm tact)</td><td>6.0 mm</td></tr>
+    <tr><td>OLED module glass</td><td>4.9 mm</td></tr>
+    <tr><td>Power switch SW1</td><td>3.2 mm</td></tr>
+    <tr><td>Buzzer MLT-5030</td><td>2.0 mm</td></tr>
+  </table>
+  <h2>Back (below the board)</h2>
+  <table>
+    <tr><td>CR2032 holder (with cell)</td><td>5.6 mm</td></tr>
+    <tr><td>EEPROM U2 (SOIC-8)</td><td>1.8 mm</td></tr>
+    <tr><td>MCU, resistors, capacitors</td><td>&lt; 1.8 mm</td></tr>
+  </table>
+  <h2>Board</h2>
+  <table>
+    <tr><td>PCB</td><td>35.56 × 50.8 × 1.6 mm</td></tr>
+    <tr><td>Total thickness</td><td>13.2 mm</td></tr>
+    <tr><td>with programming header</td><td>15.7 mm</td></tr>
+  </table>
+</aside>
+<script>
+  const mv = document.querySelector('model-viewer');
+  function view(orbit) { mv.cameraOrbit = orbit; mv.cameraTarget = 'auto auto auto'; }
+</script>
+</body>
+</html>

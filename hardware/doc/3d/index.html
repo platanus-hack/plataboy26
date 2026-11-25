@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PH26 Console Mockup</title>
+<script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+<style>
+  :root { --bg: #f4f5f7; --panel: #fff; --fg: #111827; --muted: #4b5563; --line: #e5e7eb; --accent: #c2410c; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0f1115; --panel: #171a21; --fg: #e5e7eb; --muted: #9ca3af; --line: #262b35; --accent: #fb923c; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--fg); }
+  header { padding: 16px 20px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  h1 { font-size: 18px; margin: 0; } header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+  .main { display: grid; grid-template-columns: 1fr 340px; min-height: 70vh; }
+  model-viewer { width: 100%; height: 72vh; background: radial-gradient(#ffffff, #d9dce3); }
+  aside { padding: 16px 20px; border-left: 1px solid var(--line); background: var(--panel); overflow: auto; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 16px 0 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  td { padding: 4px 0; border-bottom: 1px solid var(--line); } td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  button { font: inherit; font-size: 13px; padding: 6px 10px; margin: 0 4px 6px 0; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--fg); cursor: pointer; }
+  button:hover, button.on { border-color: var(--accent); color: var(--accent); }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; padding: 16px 20px 32px; }
+  figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  figure img { width: 100%; display: block; cursor: zoom-in; background: #c9ccd6; }
+  figcaption { font-size: 12px; color: var(--muted); padding: 6px 8px; }
+  .zoom { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: none; align-items: center; justify-content: center; z-index: 9; cursor: zoom-out; }
+  .zoom img { max-width: 96vw; max-height: 94vh; }
+  @media (max-width: 860px) { .main { grid-template-columns: 1fr; } aside { border-left: 0; border-top: 1px solid var(--line); } model-viewer { height: 60vh; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Platanus Hack 26 · CH32V003 game console · board rev. 1.3</h1>
+  <p>Rotate the 3D model, jump to a view, or open any render below. Parts use LCSC's own 3D models; the OLED module is the supplier's EB096-01-04G-WB, modelled from its datasheet.</p>
+</header>
+<div class="main">
+  <model-viewer id="mv" src="console_v1.3.glb?v=1793244334" camera-controls touch-action="pan-y" shadow-intensity="1"
+    camera-orbit="-25deg 50deg auto" exposure="1.1" alt="Console rev. 1.3, assembled"></model-viewer>
+  <aside>
+    <h2>Silkscreen colour</h2>
+    <button data-silk="" class="on">White</button>
+    <button data-silk="_yellow">Yellow</button>
+    <h2>Views</h2>
+    <button data-orbit="-25deg 50deg auto">Front 3/4</button>
+    <button data-orbit="0deg 0deg auto">Front</button>
+    <button data-orbit="180deg 180deg auto">Back (plaque)</button>
+    <button data-orbit="150deg 125deg auto">Back 3/4</button>
+    <button data-orbit="0deg 90deg auto">Side</button>
+    <h2>Front</h2>
+    <table>
+      <tr><td>PH↗26, under the screen</td><td>16.3 × 2.9 mm</td></tr>
+      <tr><td>platanus hack [26], left edge</td><td>17.7 × 2.4 mm</td></tr>
+      <tr><td>STGO 20-22.NOV.26, right edge</td><td>13.5 × 1.0 mm</td></tr>
+      <tr><td>PLATABOY.26, left of DOWN</td><td>8.2 × 0.95 mm</td></tr>
+      <tr><td>Platanus logo, bottom strip</td><td>13.2 × 2.6 mm</td></tr>
+      <tr><td>Buk logo, bottom strip</td><td>6.0 × 2.6 mm</td></tr>
+    </table>
+    <h2>Back</h2>
+    <table>
+      <tr><td>Banana Pioneer plaque</td><td>30 × 23.8 mm</td></tr>
+      <tr><td>Repo link, under the coin cell</td><td>github.com/platanus-hack/plataboy26</td></tr>
+    </table>
+    <h2>Heights</h2>
+    <table>
+      <tr><td>Buttons A, B, D-pad</td><td>6.0 mm</td></tr>
+      <tr><td>OLED glass (EB096-01-04G-WB)</td><td>5.65 mm</td></tr>
+      <tr><td>Programming header (not fitted)</td><td>8.5 mm</td></tr>
+      <tr><td>Coin cell holder (back)</td><td>−5.6 mm</td></tr>
+      <tr><td>Total thickness</td><td>13.2 mm</td></tr>
+    </table>
+    <h2>Board</h2>
+    <table>
+      <tr><td>PCB</td><td>35.56 × 54.8 × 1.6 mm</td></tr>
+      <tr><td>Mounting holes</td><td>3 × M2 (2.2 mm): top corners + bottom centre</td></tr>
+      <tr><td>Memory</td><td>128 KiB EEPROM</td></tr>
+      <tr><td>Buttons</td><td>D-pad + A + B</td></tr>
+    </table>
+  </aside>
+</div>
+<div class="gallery">
+  <figure><img data-v="front" src="front.png?v=1793244334" alt="Front, top view"><figcaption>Front</figcaption></figure>
+  <figure><img data-v="back" src="back.png?v=1793244334" alt="Back, bottom view"><figcaption>Back · banana plaque</figcaption></figure>
+  <figure><img data-v="iso_top" src="iso_top.png?v=1793244334" alt="Front, angled"><figcaption>Front, angled</figcaption></figure>
+  <figure><img data-v="iso_bottom" src="iso_bottom.png?v=1793244334" alt="Back, angled"><figcaption>Back, angled</figcaption></figure>
+  <figure><img src="silk_compare.png?v=1793244334" alt="White vs yellow silkscreen"><figcaption>White vs yellow silkscreen</figcaption></figure>
+  <figure><img src="side_front.png?v=1793244334" alt="Side view from the bottom edge"><figcaption>Side, bottom edge</figcaption></figure>
+  <figure><img src="side_right.png?v=1793244334" alt="Side view from the right edge"><figcaption>Side, right edge</figcaption></figure>
+  <figure><img src="side_annotated.png?v=1793244334" alt="Heights"><figcaption>Heights (measured)</figcaption></figure>
+  <figure><img src="before_after.png?v=1793244334" alt="Rev. 1.1 vs rev. 1.3"><figcaption>Rev. 1.1 → 1.3</figcaption></figure>
+</div>
+<div class="zoom" id="zoom"><img alt=""></div>
+<script>
+  const mv = document.getElementById('mv');
+  for (const b of document.querySelectorAll('[data-orbit]'))
+    b.onclick = () => { mv.cameraOrbit = b.dataset.orbit; mv.cameraTarget = 'auto auto auto'; mv.fieldOfView = 'auto'; };
+  const ver = mv.getAttribute('src').split('?v=')[1] || '';
+  for (const b of document.querySelectorAll('[data-silk]'))
+    b.onclick = () => {
+      const sfx = b.dataset.silk, orbit = mv.getCameraOrbit().toString(), target = mv.getCameraTarget().toString();
+      mv.addEventListener('load', () => { mv.cameraOrbit = orbit; mv.cameraTarget = target; mv.jumpCameraToGoal(); }, { once: true });
+      mv.src = `console_v1.3${sfx}.glb?v=${ver}`;
+      for (const img of document.querySelectorAll('img[data-v]')) img.src = `${img.dataset.v}${sfx}.png?v=${ver}`;
+      for (const o of document.querySelectorAll('[data-silk]')) o.classList.toggle('on', o === b);
+    };
+  const zoom = document.getElementById('zoom');
+  for (const img of document.querySelectorAll('figure img'))
+    img.onclick = () => { zoom.querySelector('img').src = img.src; zoom.style.display = 'flex'; };
+  zoom.onclick = () => { zoom.style.display = 'none'; };
+</script>
+</body>
+</html>

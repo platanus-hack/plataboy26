@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="570" viewBox="0 0 1400 570" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1400" height="570" fill="#ffffff"/>
+  <defs>
+    <style>
+      .w{stroke:#1f2937;stroke-width:2.2;fill:none}
+      .n{stroke:#e8590c;stroke-width:2.6;fill:none}
+      .box{fill:#f3f4f6;stroke:#1f2937;stroke-width:2}
+      .nbox{fill:#fff4e6;stroke:#e8590c;stroke-width:2.4}
+      .t{font-size:15px;fill:#111827}
+      .s{font-size:12.5px;fill:#4b5563}
+      .h{font-size:22px;font-weight:700;fill:#111827}
+      .nt{font-size:13px;fill:#c2410c}
+      .pin{font-size:12px;fill:#111827}
+    </style>
+    <g id="gnd"><path class="w" d="M-10 0h20M-6 5h12M-2 10h4"/></g>
+    <g id="gndn"><path class="n" d="M-10 0h20M-6 5h12M-2 10h4"/></g>
+  </defs>
+
+  <!-- ================= BEFORE ================= -->
+  <text class="h" x="30" y="40">Before — rev. 1.1</text>
+  <text class="s" x="30" y="62">I2C bus PC1 / PC2: only the OLED. Program + data must fit in the MCU's 16 KiB flash.</text>
+
+  <!-- MCU -->
+  <rect class="box" x="40" y="130" width="170" height="200" rx="6"/>
+  <text class="t" x="55" y="155" font-weight="700">U1 CH32V003J4M6</text>
+  <text class="s" x="55" y="174">16 KiB flash · 2 KiB RAM</text>
+  <text class="pin" x="150" y="224">PC1 (5)</text>
+  <text class="pin" x="150" y="264">PC2 (6)</text>
+  <text class="pin" x="55" y="304">PA1 · PA2 · PC4 · PD1</text>
+  <text class="s" x="55" y="322">buzzer, fire, pad, SWIO</text>
+
+  <!-- bus -->
+  <path class="w" d="M210 220H560M210 260H560"/>
+  <text class="t" x="240" y="212">SDA</text><text class="t" x="240" y="252">SCL</text>
+
+  <!-- OLED -->
+  <rect class="box" x="560" y="170" width="120" height="130" rx="6"/>
+  <text class="t" x="575" y="196" font-weight="700">H1 OLED</text>
+  <text class="s" x="575" y="214">SSD1306 module</text>
+  <text class="s" x="575" y="232">I2C 0x3C</text>
+  <text class="s" x="575" y="268">pull-ups on</text>
+  <text class="s" x="575" y="284">the module</text>
+  <text class="s" x="300" y="380">Each game is flashed into the MCU over SWIO.</text>
+  <text class="s" x="300" y="398">Only one game fits at a time (the largest is 15 KiB).</text>
+
+  <!-- divider -->
+  <path d="M700 30V530" stroke="#d1d5db" stroke-width="2" stroke-dasharray="6 6"/>
+
+  <!-- ================= AFTER ================= -->
+  <g transform="translate(700 0)">
+  <text class="h" x="30" y="40">After — rev. 1.3</text>
+  <text class="s" x="30" y="62">Same 8 pins: EEPROM on the I2C bus, B button on PA2 (orange). Existing games run unchanged.</text>
+
+  <rect class="box" x="40" y="130" width="170" height="200" rx="6"/>
+  <text class="t" x="55" y="155" font-weight="700">U1 CH32V003J4M6</text>
+  <text class="s" x="55" y="174">unchanged</text>
+  <text class="pin" x="150" y="224">PC1 (5)</text>
+  <text class="pin" x="150" y="264">PC2 (6)</text>
+  <text class="pin" x="55" y="304">PA1 · PC4 · PD1</text>
+  <text class="s" x="55" y="322">unchanged</text>
+  <text class="pin" x="150" y="290">PA2 (3)</text>
+
+  <!-- PA2: A to GND, B via R9 100k, R10 10k pull-up -->
+  <path class="w" d="M210 286H232"/>
+  <path class="n" d="M232 286V470"/>
+  <circle cx="232" cy="350" r="3.5" fill="#e8590c"/><circle cx="232" cy="420" r="3.5" fill="#e8590c"/>
+  <path class="w" d="M232 350H262"/><path class="w" d="M262 343l22 7M284 350H300M262 350l0 0"/>
+  <text class="pin" x="256" y="338">A</text>
+  <path class="w" d="M300 350V362"/><use href="#gnd" x="300" y="362"/>
+  <path class="n" d="M232 420H252"/><rect class="nbox" x="252" y="413" width="34" height="14"/><text class="nt" x="252" y="408">R9 100k</text>
+  <path class="n" d="M286 420H300M300 413l22 7M322 420H336V432"/><use href="#gndn" x="336" y="432"/>
+  <text class="nt" x="304" y="406">B</text>
+  <path class="n" d="M232 470H252"/><rect class="nbox" x="252" y="463" width="34" height="14"/><text class="nt" x="252" y="458">R10 10k</text>
+  <path class="n" d="M286 470H312"/><text class="nt" x="316" y="474">VCC</text>
+
+  <path class="w" d="M210 220H560M210 260H560"/>
+  <text class="t" x="225" y="212">SDA</text><text class="t" x="225" y="252">SCL</text>
+
+  <rect class="box" x="560" y="170" width="120" height="130" rx="6"/>
+  <text class="t" x="575" y="196" font-weight="700">H1 OLED</text>
+  <text class="s" x="575" y="214">SSD1306 module</text>
+  <text class="s" x="575" y="232">I2C 0x3C</text>
+
+  <!-- pull-ups R7 R8 -->
+  <path class="n" d="M290 220V175M340 260V175"/>
+  <rect class="nbox" x="282" y="135" width="16" height="40"/><rect class="nbox" x="332" y="135" width="16" height="40"/>
+  <path class="n" d="M290 135V105M340 135V105M270 105H360"/>
+  <text class="nt" x="300" y="98">VCC</text>
+  <text class="nt" x="250" y="150">R7</text><text class="nt" x="252" y="166">10k</text>
+  <text class="nt" x="354" y="150">R8</text><text class="nt" x="354" y="166">10k</text>
+  <circle cx="290" cy="220" r="3.5" fill="#e8590c"/><circle cx="340" cy="260" r="3.5" fill="#e8590c"/>
+
+  <!-- EEPROM -->
+  <path class="n" d="M430 220V330M470 260V330"/>
+  <circle cx="430" cy="220" r="3.5" fill="#e8590c"/><circle cx="470" cy="260" r="3.5" fill="#e8590c"/>
+  <rect class="nbox" x="380" y="330" width="190" height="130" rx="6"/>
+  <text class="pin" x="420" y="348">SDA(5)</text><text class="pin" x="462" y="364">SCL(6)</text>
+  <text class="t" x="395" y="392" font-weight="700" fill="#c2410c">U2 AT24CM01</text>
+  <text class="nt" x="395" y="410">128 KiB EEPROM</text>
+  <text class="nt" x="395" y="428">I2C 0x50 / 0x51</text>
+  <text class="pin" x="395" y="449">A1 A2 WP GND (2,3,7,4)</text>
+  <path class="n" d="M570 445H660V460"/><use href="#gndn" x="660" y="460"/>
+  <!-- VCC + C3 -->
+  <path class="n" d="M570 380H620M620 380V350M620 380V400"/>
+  <text class="pin" x="574" y="374">VCC(8)</text>
+  <text class="nt" x="606" y="345">VCC</text>
+  <path class="n" d="M608 400H632M608 408H632M620 408V430"/><use href="#gndn" x="620" y="430"/>
+  <text class="nt" x="638" y="408">C3 100n</text>
+
+  <text class="s" x="40" y="525">EEPROM: every published game fits (~103 of 128 KiB).</text>
+  <text class="s" x="40" y="543">B: 0.91 VDD = logic 1 for old games, ADC ~940 for new ones.</text>
+  </g>
+</svg>
